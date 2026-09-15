@@ -10,9 +10,27 @@ services:
     command: npm run dev -- -H 0.0.0.0
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://navia:Zefiron1!@host.docker.internal:27018/admin_ia?authSource=admin
+      - MONGODB_URI=mongodb://navia:Zefiron1!@mongo:27017/admin_ia?authSource=admin
       - ADMIN_PASSWORD=admin123456
       - JWT_SECRET=zefiron_admin_ia_jwt_super_secret_key_2026_x99
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    container_name: admin_ia_mongo
+    restart: unless-stopped
+    ports:
+      - "27019:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=navia
+      - MONGO_INITDB_ROOT_PASSWORD=Zefiron1!
+      - MONGO_INITDB_DATABASE=admin_ia
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

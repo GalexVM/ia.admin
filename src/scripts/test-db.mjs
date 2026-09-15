@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const uri = process.env.MONGODB_URI || "mongodb://navia:Zefiron1!@host.docker.internal:27018/admin_ia?authSource=admin";
+const uri = process.env.MONGODB_URI || "mongodb://navia:Zefiron1!@127.0.0.1:27019/admin_ia?authSource=admin";
 console.log("Probando conexión autenticada a MongoDB...");
 
 try {

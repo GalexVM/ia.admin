@@ -17,6 +17,7 @@ import {
   Clock,
   AlertTriangle,
   X,
+  Trash2,
 } from "lucide-react";
 import styles from "./dashboard.module.css";
 import { TenantStatus } from "@/models/TenantConfig";
@@ -40,8 +41,10 @@ export default function DashboardPage() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [creationMode, setCreationMode] = useState<"new" | "import">("new");
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newChatbotUrl, setNewChatbotUrl] = useState("");
+  const [importUrl, setImportUrl] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
   const fetchTenants = async () => {
@@ -98,6 +101,52 @@ export default function DashboardPage() {
       alert("Error al conectar con el servidor");
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleImportTenant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const res = await fetch("/api/admin/tenants/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: importUrl }),
+      });
+      const data = await res.json();
+      if (res.ok && data.tenant) {
+        setTenants((prev) => [data.tenant, ...prev]);
+        setIsModalOpen(false);
+        setImportUrl("");
+        setCreationMode("new");
+      } else {
+        alert(data.error || "Error al importar el tenant");
+      }
+    } catch (err) {
+      alert("Error al conectar con el servidor para importar");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteTenant = async (id: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este tenant? Esta acción no se puede deshacer.")) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/admin/tenants/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setTenants((prev) => prev.filter((t) => t._id !== id));
+      } else {
+        alert(data.error || "Error al eliminar el tenant");
+      }
+    } catch (err) {
+      alert("Error al conectar con el servidor para eliminar");
     }
   };
 
@@ -293,7 +342,7 @@ export default function DashboardPage() {
                         </button>
                       </div>
                     </td>
-                    <td>
+                    <td style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                       <a
                         href={`/setup/${t.token}`}
                         target="_blank"
@@ -303,6 +352,24 @@ export default function DashboardPage() {
                         <span>Abrir Wizard</span>
                         <ExternalLink size={12} />
                       </a>
+                      <button
+                        onClick={() => handleDeleteTenant(t._id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "6px 8px",
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--error)",
+                          color: "var(--error)",
+                          background: "transparent",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                        title="Eliminar Onboarding"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -317,7 +384,9 @@ export default function DashboardPage() {
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Crear Nuevo Tenant</h3>
+              <h3 className={styles.modalTitle}>
+                {creationMode === "new" ? "Crear Nuevo Tenant" : "Importar Tenant Existente"}
+              </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className={styles.closeModalBtn}
@@ -326,64 +395,143 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateTenant} className={styles.modalForm}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
-                  Nombre de la Empresa / Cliente
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Inmobiliaria Panorama"
-                  value={newCompanyName}
-                  onChange={(e) => setNewCompanyName(e.target.value)}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: "var(--radius-sm)",
-                    border: "1px solid var(--border-default)",
-                    fontSize: "0.875rem",
-                  }}
-                  autoFocus
-                />
-              </div>
+            <div style={{ display: "flex", gap: "10px", padding: "0 24px", marginBottom: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setCreationMode("new")}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "var(--radius-sm)",
+                  border: "none",
+                  background: creationMode === "new" ? "var(--brand-primary)" : "var(--bg-card-hover)",
+                  color: creationMode === "new" ? "#fff" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                }}
+              >
+                Nuevo Onboarding
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreationMode("import")}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "var(--radius-sm)",
+                  border: "none",
+                  background: creationMode === "import" ? "var(--brand-primary)" : "var(--bg-card-hover)",
+                  color: creationMode === "import" ? "#fff" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                }}
+              >
+                Importar por URL
+              </button>
+            </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
-                  URL de la Instancia Chatbot (Opcional)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://api.cliente.com/configuration"
-                  value={newChatbotUrl}
-                  onChange={(e) => setNewChatbotUrl(e.target.value)}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: "var(--radius-sm)",
-                    border: "1px solid var(--border-default)",
-                    fontSize: "0.875rem",
-                  }}
-                />
-                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                  Si la dejas vacía, el onboarding guardará los datos en MongoDB para aprovisionamiento diferido.
-                </span>
-              </div>
+            {creationMode === "new" ? (
+              <form onSubmit={handleCreateTenant} className={styles.modalForm}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                    Nombre de la Empresa / Cliente
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Inmobiliaria Panorama"
+                    value={newCompanyName}
+                    onChange={(e) => setNewCompanyName(e.target.value)}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--border-default)",
+                      fontSize: "0.875rem",
+                    }}
+                    autoFocus
+                  />
+                </div>
 
-              <div className={styles.modalFooter}>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className={styles.cancelBtn}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className={styles.primaryBtn}
-                >
-                  {isCreating ? "Generando..." : "Generar Token y Link"}
-                </button>
-              </div>
-            </form>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                    URL de la Instancia Chatbot (Opcional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://api.cliente.com/configuration"
+                    value={newChatbotUrl}
+                    onChange={(e) => setNewChatbotUrl(e.target.value)}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--border-default)",
+                      fontSize: "0.875rem",
+                    }}
+                  />
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    Si la dejas vacía, el onboarding guardará los datos en MongoDB para aprovisionamiento diferido.
+                  </span>
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className={styles.cancelBtn}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreating}
+                    className={styles.primaryBtn}
+                  >
+                    {isCreating ? "Generando..." : "Generar Token y Link"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleImportTenant} className={styles.modalForm}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                    Endpoint de Configuración (URL)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="Ej. https://ia.zefiron.com/demo/configuration"
+                    value={importUrl}
+                    onChange={(e) => setImportUrl(e.target.value)}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--border-default)",
+                      fontSize: "0.875rem",
+                    }}
+                    required
+                    autoFocus
+                  />
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    El sistema extraerá el JSON y registrará el tenant automáticamente como configurado.
+                  </span>
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className={styles.cancelBtn}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreating || !importUrl}
+                    className={styles.primaryBtn}
+                  >
+                    {isCreating ? "Importando..." : "Sincronizar e Importar"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

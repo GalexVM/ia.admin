@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27018/admin_ia";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27019/admin_ia";
 
 if (!MONGODB_URI) {
   throw new Error("Por favor define la variable de entorno MONGODB_URI en .env.local");
