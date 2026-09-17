@@ -81,6 +81,10 @@ export async function POST(req: Request, context: RouteContext) {
 
     // Actualizar configuración preservando valores previos (como Cat. 10 de devs)
     if (configuration && typeof configuration === "object") {
+      // Guardar la intención original del usuario en su estado bruto
+      tenant.user_initial_intent = configuration;
+      tenant.markModified("user_initial_intent");
+
       tenant.configuration = {
         ...(tenant.configuration || {}),
         ...configuration,

@@ -37,6 +37,7 @@ export default function TenantDetailPage({ params }: PageProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showIntent, setShowIntent] = useState(false);
 
   const [feedbackMessage, setFeedbackMessage] = useState<{
     type: "success" | "error" | "info";
@@ -256,6 +257,15 @@ export default function TenantDetailPage({ params }: PageProps) {
                 <History size={14} />
                 <span>Historial Sync</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setShowIntent(!showIntent)}
+                className={styles.secondaryBtn}
+              >
+                <Layers size={14} />
+                <span>Intención Inicial</span>
+              </button>
             </div>
           </div>
         </div>
@@ -322,6 +332,22 @@ export default function TenantDetailPage({ params }: PageProps) {
                   </div>
                 ))}
             </div>
+          </div>
+        )}
+
+        {/* Intención inicial si está desplegado */}
+        {showIntent && (
+          <div className={styles.historyCard}>
+            <h3 className={styles.historyTitle}>Intención Inicial del Cliente (Raw JSON)</h3>
+            {tenant.user_initial_intent ? (
+              <pre style={{ background: "var(--bg-card)", padding: 16, borderRadius: 8, fontSize: "0.8125rem", color: "var(--text-primary)", overflowX: "auto" }}>
+                {JSON.stringify(tenant.user_initial_intent, null, 2)}
+              </pre>
+            ) : (
+              <span style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>
+                No hay registros de intención inicial del cliente aún.
+              </span>
+            )}
           </div>
         )}
 

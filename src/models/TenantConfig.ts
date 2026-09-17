@@ -135,6 +135,7 @@ export interface ITenantConfig extends Document {
   chatbot_url?: string;
   status: TenantStatus;
   configuration: TenantConfiguration;
+  user_initial_intent?: Record<string, any>;
   sync_history: SyncRecord[];
   last_synced_at?: Date;
   createdAt: Date;
@@ -173,6 +174,9 @@ const TenantConfigSchema = new Schema<ITenantConfig>(
     configuration: { 
       type: Schema.Types.Mixed, 
       default: {} 
+    },
+    user_initial_intent: {
+      type: Schema.Types.Mixed,
     },
     sync_history: [
       {
