@@ -51,37 +51,7 @@ export async function POST(req: Request) {
       chatbot_name: chatbotName,
       chatbot_url: url,
       status: "configured",
-      configuration: {
-        company_profile: {
-          company_name: companyName,
-          industry: "",
-          description: "",
-          website: "",
-          contact_email: configData.email_jefe_comercial || "",
-          phone: "",
-        },
-        bot_persona: {
-          chatbot_name: chatbotName,
-          fallback_agent: configData.fallback_agent || "",
-          writing_tone: configData.writing_tone?.toLowerCase() === "regular" ? "friendly" : "friendly",
-          language: "es",
-          welcome_message: configData.message_personalitiy?.message || "",
-          fallback_message: "",
-        },
-        rules_features: {
-          enable_lead_capture: true,
-          enable_booking: configData.enable_module_visit || false,
-          enable_human_escalation: true,
-          enable_faq: true,
-          business_hours: {
-            enabled: false,
-            schedule: "Lunes a Viernes 09:00 - 18:00",
-          },
-          custom_rules: "",
-          banned_topics: "",
-        },
-        raw_config: configData,
-      },
+      configuration: configData,
       sync_history: [
         {
           synced_at: new Date(),

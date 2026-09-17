@@ -36,34 +36,13 @@ export async function POST(req: Request) {
       chatbot_url: chatbot_url?.trim() || "",
       status: "pending_onboarding",
       configuration: {
-        company_profile: {
-          company_name: company_name?.trim() || "",
-          industry: "",
-          description: "",
-          website: "",
-          contact_email: "",
-          phone: "",
-        },
-        bot_persona: {
-          chatbot_name: "Zefiron Bot",
-          fallback_agent: "",
-          writing_tone: "friendly",
-          language: "es",
-          welcome_message: "¡Hola! Bienvenido a nuestro canal de atención. ¿En qué podemos ayudarte hoy?",
-          fallback_message: "Disculpa, no logré entender tu consulta. Un asesor humano te asistirá en breve.",
-        },
-        rules_features: {
-          enable_lead_capture: true,
-          enable_booking: true,
-          enable_human_escalation: true,
-          enable_faq: true,
-          business_hours: {
-            enabled: false,
-            schedule: "Lunes a Viernes 09:00 - 18:00",
-          },
-          custom_rules: "",
-          banned_topics: "",
-        },
+        company_name: company_name?.trim() || "",
+        chatbot_name: "Zefiron Bot",
+        writing_tone: "friendly",
+        enable_budget: true,
+        enable_module_visit: true,
+        enabled_scoring: true,
+        // Al quedar vacío, el frontend (o Python) rellenará el resto.
       },
     });
 

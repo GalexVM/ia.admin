@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Shield,
   LogOut,
@@ -18,6 +19,7 @@ import {
   AlertTriangle,
   X,
   Trash2,
+  Sliders,
 } from "lucide-react";
 import styles from "./dashboard.module.css";
 import { TenantStatus } from "@/models/TenantConfig";
@@ -343,6 +345,19 @@ export default function DashboardPage() {
                       </div>
                     </td>
                     <td style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <Link
+                        href={`/dashboard/tenants/${t._id}`}
+                        className={styles.openLinkBtn}
+                        style={{
+                          background: "var(--brand-surface)",
+                          color: "var(--brand-primary)",
+                          borderColor: "var(--brand-border)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Sliders size={12} />
+                        <span>Configuración</span>
+                      </Link>
                       <a
                         href={`/setup/${t.token}`}
                         target="_blank"

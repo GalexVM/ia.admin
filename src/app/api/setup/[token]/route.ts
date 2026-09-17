@@ -64,47 +64,29 @@ export async function POST(req: Request, context: RouteContext) {
       );
     }
 
-    const { company_profile, bot_persona, rules_features } = body;
+    const { configuration, company_name, chatbot_name } = body;
 
-    // Actualizar campos base y configuración interna
-    if (company_profile?.company_name) {
-      tenant.company_name = company_profile.company_name;
-    }
-    if (bot_persona?.chatbot_name) {
-      tenant.chatbot_name = bot_persona.chatbot_name;
+    // Actualizar nombre de empresa y bot
+    if (company_name) {
+      tenant.company_name = company_name;
+    } else if (configuration?.company_name) {
+      tenant.company_name = configuration.company_name;
     }
 
-    tenant.configuration = {
-      company_profile: {
-        company_name: company_profile?.company_name || tenant.company_name,
-        industry: company_profile?.industry || "",
-        description: company_profile?.description || "",
-        website: company_profile?.website || "",
-        contact_email: company_profile?.contact_email || "",
-        phone: company_profile?.phone || "",
-      },
-      bot_persona: {
-        chatbot_name: bot_persona?.chatbot_name || tenant.chatbot_name,
-        fallback_agent: bot_persona?.fallback_agent || "",
-        writing_tone: bot_persona?.writing_tone || "friendly",
-        language: bot_persona?.language || "es",
-        welcome_message: bot_persona?.welcome_message || "",
-        fallback_message: bot_persona?.fallback_message || "",
-      },
-      rules_features: {
-        enable_lead_capture: rules_features?.enable_lead_capture ?? true,
-        enable_booking: rules_features?.enable_booking ?? true,
-        enable_human_escalation: rules_features?.enable_human_escalation ?? true,
-        enable_faq: rules_features?.enable_faq ?? true,
-        business_hours: {
-          enabled: rules_features?.business_hours?.enabled ?? false,
-          schedule: rules_features?.business_hours?.schedule || "Lunes a Viernes 09:00 - 18:00",
-        },
-        custom_rules: rules_features?.custom_rules || "",
-        banned_topics: rules_features?.banned_topics || "",
-      },
-      raw_config: tenant.configuration?.raw_config || {},
-    };
+    if (chatbot_name) {
+      tenant.chatbot_name = chatbot_name;
+    } else if (configuration?.chatbot_name) {
+      tenant.chatbot_name = configuration.chatbot_name;
+    }
+
+    // Actualizar configuración preservando valores previos (como Cat. 10 de devs)
+    if (configuration && typeof configuration === "object") {
+      tenant.configuration = {
+        ...(tenant.configuration || {}),
+        ...configuration,
+      };
+      tenant.markModified("configuration");
+    }
 
     let syncResult = {
       syncedDirectly: false,
@@ -113,32 +95,42 @@ export async function POST(req: Request, context: RouteContext) {
 
     // Capa de Sincronización Remota
     if (tenant.chatbot_url && tenant.chatbot_url.trim().startsWith("http")) {
-      const targetUrl = tenant.chatbot_url.trim().endsWith("/configuration")
-        ? tenant.chatbot_url.trim()
-        : `${tenant.chatbot_url.trim().replace(/\/+$/, "")}/configuration`;
-
-      const remotePayload = {
-        company_name: tenant.configuration.company_profile.company_name,
-        chatbot_name: tenant.configuration.bot_persona.chatbot_name,
-        fallback_agent: tenant.configuration.bot_persona.fallback_agent,
-        writing_tone: tenant.configuration.bot_persona.writing_tone,
-        language: tenant.configuration.bot_persona.language,
-        welcome_message: tenant.configuration.bot_persona.welcome_message,
-        fallback_message: tenant.configuration.bot_persona.fallback_message,
-        company_profile: tenant.configuration.company_profile,
-        rules_features: tenant.configuration.rules_features,
-      };
+      const rawUrl = tenant.chatbot_url.trim();
+      const targetUrl = rawUrl.endsWith("/configuration")
+        ? rawUrl
+        : `${rawUrl.replace(/\/+$/, "")}/configuration`;
 
       try {
+        // 1. Obtener configuración actual del bot para evitar error 422 por campos faltantes
+        let fullConfigToSync = tenant.configuration;
+        try {
+          const getRes = await fetch(targetUrl, {
+            method: "GET",
+            headers: { accept: "application/json" },
+          });
+          if (getRes.ok) {
+            const remoteConfig = await getRes.json();
+            if (remoteConfig && typeof remoteConfig === "object") {
+              fullConfigToSync = { ...remoteConfig, ...tenant.configuration };
+              // También guardamos la config completa en la BD
+              tenant.configuration = fullConfigToSync;
+              tenant.markModified("configuration");
+            }
+          }
+        } catch (getErr) {
+          console.warn("No se pudo obtener config remota previa al PUT:", getErr);
+        }
+
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 7000);
+        const timeoutId = setTimeout(() => controller.abort(), 9000);
 
         const remoteRes = await fetch(targetUrl, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            accept: "application/json",
           },
-          body: JSON.stringify(remotePayload),
+          body: JSON.stringify(fullConfigToSync),
           signal: controller.signal,
         });
 
