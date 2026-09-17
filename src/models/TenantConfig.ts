@@ -1,44 +1,125 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export type TenantStatus = "pending_onboarding" | "configured" | "synced" | "error";
-export type WritingTone = "formal" | "friendly" | "concise" | "creative";
-
-export interface CompanyProfile {
-  company_name: string;
-  industry: string;
-  description: string;
-  website?: string;
-  contact_email?: string;
-  phone?: string;
-}
-
-export interface BotPersona {
-  chatbot_name: string;
-  fallback_agent?: string;
-  writing_tone: WritingTone;
-  language: string;
-  welcome_message?: string;
-  fallback_message?: string;
-}
-
-export interface RulesFeatures {
-  enable_lead_capture: boolean;
-  enable_booking: boolean;
-  enable_human_escalation: boolean;
-  enable_faq: boolean;
-  business_hours: {
-    enabled: boolean;
-    schedule?: string;
-  };
-  custom_rules?: string;
-  banned_topics?: string;
-}
+export type WritingTone = "formal" | "friendly" | "concise" | "creative" | "REGULAR" | "STRICT";
+export type UnitPricePolicy = "NONE" | "TOTAL_PRICE" | "PRICE_M2";
 
 export interface TenantConfiguration {
-  company_profile: CompanyProfile;
-  bot_persona: BotPersona;
-  rules_features: RulesFeatures;
-  raw_config?: Record<string, unknown>;
+  // 1. Identidad y configuración base
+  company_name?: string;
+  company_address?: string;
+  company_coords?: string[];
+  chatbot_name?: string;
+  personality_prompt?: string;
+  writing_tone?: WritingTone;
+
+  // 2. Información que el bot puede revelar
+  price_policy?: UnitPricePolicy;
+  gives_average_prices?: boolean;
+  gives_price_per_m2?: boolean;
+  gives_average_space_metrics?: boolean;
+  gives_number_of_unities_available?: boolean;
+  gives_if_available_unities?: boolean;
+  gives_start_date?: boolean;
+  gives_end_date?: boolean;
+  gives_number_blocks_or_levels?: boolean;
+  gives_views?: boolean;
+  gives_location?: boolean;
+  gives_financing?: boolean;
+  send_brochures?: boolean;
+  send_pictures?: boolean;
+  shows_assesor_name?: boolean;
+  offers_principal_zones?: boolean;
+  include_brochure_in_info?: boolean;
+
+  // 3. Captura de datos del lead
+  enable_name_completed?: boolean;
+  enable_budget?: boolean;
+  ask_budget?: boolean;
+  budget_mode?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ranges_predefined?: Record<string, any>[];
+  asks_about_purpose?: boolean;
+  asks_name_from_the_beggining?: boolean;
+  asks_investment_time?: boolean;
+
+  // 4. Agendamiento y citas
+  enable_module_visit?: boolean;
+  uses_google_calendar?: boolean;
+  days_available_visit?: number;
+  range_available_visit?: Record<string, string>;
+  seleccion_mode_date?: string;
+  duration_date?: number;
+  appointment_duration?: number;
+  chooses_activity?: boolean;
+  custom_activities?: string[];
+  enabled_message_visit?: boolean;
+  scheduling_message_completed?: string;
+
+  // 5. Calificación del lead y resumen para el asesor
+  enabled_scoring?: boolean;
+  automatic_summary?: boolean;
+
+  // 6. Sesión y reactivación de leads
+  user_session_window?: number;
+  info_refresh_time?: number;
+  recontact_hours?: number;
+  recontact_times?: number;
+
+  // 7. Seguridad y bloqueos
+  phrases_to_avoid?: string;
+  blacklist_short_timeout?: number;
+  blacklist_large_timeout?: number;
+
+  // 8. Handoff y emergencias
+  fallback_main_activity?: string;
+  fallback_urgent_activity?: string;
+  fallback_urgent_tag_schedule?: string;
+  fallback_urgent_tag_frustrated?: string;
+  fallback_urgent_tag_error?: string;
+
+  // 9. Stickers Zefi
+  uses_stickers?: boolean;
+
+  // 10. Developer only
+  meta_campaings_enable?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  meta_campaings?: any[];
+  message_personality_enable?: boolean;
+  multimedia_resources?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  message_personalitiy?: Record<string, any>;
+  email_jefe_comercial?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  location_resources?: Record<string, any>;
+  fallback_agent?: string;
+  ignored_projects?: string[];
+  scoring_intents?: Record<string, number>;
+  lead_score?: Record<string, number>;
+  investment_timeline_scores?: Record<string, number>;
+  positive_accions?: Record<string, number>;
+  negative_accions?: Record<string, number>;
+  negative_decay?: Record<string, number>;
+  project_event?: Record<string, number>;
+  configuration_list_summary?: Record<string, boolean>;
+  flood_max_messages?: number;
+  flood_window_seconds?: number;
+  flood_cooldown_seconds?: number;
+  model_smart_llm?: string;
+  model_fast_llm?: string;
+  enable_persist_leads_job?: boolean;
+  count_messages_by_lead?: number;
+  ask_all_unities?: boolean;
+  recontact_messages?: string[];
+  toker_per_response?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  token_company?: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  special_configurations?: any[];
+
+  // Support arbitrary extra fields coming from backend
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 export interface SyncRecord {
@@ -89,40 +170,9 @@ const TenantConfigSchema = new Schema<ITenantConfig>(
       default: "pending_onboarding",
       index: true,
     },
-    configuration: {
-      company_profile: {
-        company_name: { type: String, default: "" },
-        industry: { type: String, default: "" },
-        description: { type: String, default: "" },
-        website: { type: String, default: "" },
-        contact_email: { type: String, default: "" },
-        phone: { type: String, default: "" },
-      },
-      bot_persona: {
-        chatbot_name: { type: String, default: "" },
-        fallback_agent: { type: String, default: "" },
-        writing_tone: {
-          type: String,
-          enum: ["formal", "friendly", "concise", "creative"],
-          default: "friendly",
-        },
-        language: { type: String, default: "es" },
-        welcome_message: { type: String, default: "" },
-        fallback_message: { type: String, default: "" },
-      },
-      rules_features: {
-        enable_lead_capture: { type: Boolean, default: true },
-        enable_booking: { type: Boolean, default: true },
-        enable_human_escalation: { type: Boolean, default: true },
-        enable_faq: { type: Boolean, default: true },
-        business_hours: {
-          enabled: { type: Boolean, default: false },
-          schedule: { type: String, default: "Lunes a Viernes 09:00 - 18:00" },
-        },
-        custom_rules: { type: String, default: "" },
-        banned_topics: { type: String, default: "" },
-      },
-      raw_config: { type: Schema.Types.Mixed, default: {} },
+    configuration: { 
+      type: Schema.Types.Mixed, 
+      default: {} 
     },
     sync_history: [
       {
