@@ -43,7 +43,7 @@ async function runSeed() {
         bot_persona: {
           chatbot_name: "Sofía",
           fallback_agent: "Asesor Comercial Juan",
-          writing_tone: "friendly",
+          writing_tone: "REGULAR",
           language: "es",
           welcome_message: "¡Hola! Soy Sofía, asistente virtual de Inmobiliaria Panorama. ¿En qué proyecto estás interesado hoy?",
           fallback_message: "Permíteme comunicarte con Juan del equipo comercial para que te dé todos los detalles.",

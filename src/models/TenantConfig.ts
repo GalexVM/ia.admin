@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export type TenantStatus = "pending_onboarding" | "configured" | "synced" | "error";
-export type WritingTone = "formal" | "friendly" | "concise" | "creative" | "REGULAR" | "STRICT";
+export type WritingTone = "REGULAR" | "POLITE";
 export type UnitPricePolicy = "NONE" | "TOTAL_PRICE" | "PRICE_M2";
 
 export interface TenantConfiguration {
@@ -171,9 +171,9 @@ const TenantConfigSchema = new Schema<ITenantConfig>(
       default: "pending_onboarding",
       index: true,
     },
-    configuration: { 
-      type: Schema.Types.Mixed, 
-      default: {} 
+    configuration: {
+      type: Schema.Types.Mixed,
+      default: {}
     },
     user_initial_intent: {
       type: Schema.Types.Mixed,

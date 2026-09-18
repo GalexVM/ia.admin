@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       configuration: {
         company_name: company_name?.trim() || "",
         chatbot_name: "Zefiron Bot",
-        writing_tone: "friendly",
+        writing_tone: "REGULAR",
         enable_budget: true,
         enable_module_visit: true,
         enabled_scoring: true,
