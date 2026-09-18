@@ -352,18 +352,28 @@ export default function TenantDetailPage({ params }: PageProps) {
                 .slice()
                 .reverse()
                 .map((item, idx) => (
-                  <div key={idx} className={styles.historyItem}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div key={idx} className={styles.historyItem} style={{ flexDirection: "column", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
                       {item.status === "success" ? (
-                        <CheckCircle2 size={14} color="var(--success)" />
+                        <CheckCircle2 size={14} color="var(--success)" style={{ minWidth: 14 }} />
                       ) : (
-                        <AlertTriangle size={14} color="var(--danger)" />
+                        <AlertTriangle size={14} color="var(--danger)" style={{ minWidth: 14 }} />
                       )}
-                      <span>{item.message}</span>
+                      <span style={{ flex: 1 }}>{item.message}</span>
+                      <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", whiteSpace: "nowrap" }}>
+                        {new Date(item.synced_at).toLocaleString("es-ES")}
+                      </span>
                     </div>
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                      {new Date(item.synced_at).toLocaleString("es-ES")}
-                    </span>
+                    {item.payload && (
+                      <details style={{ marginTop: 12, width: "100%", fontSize: "0.8125rem", color: "var(--text-primary)" }}>
+                        <summary style={{ cursor: "pointer", color: "var(--brand-primary)", fontWeight: 500, outline: "none", userSelect: "none" }}>
+                          Ver Payload Enviado
+                        </summary>
+                        <pre style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", padding: 12, borderRadius: 8, marginTop: 8, overflowX: "auto" }}>
+                          {JSON.stringify(item.payload, null, 2)}
+                        </pre>
+                      </details>
+                    )}
                   </div>
                 ))}
             </div>

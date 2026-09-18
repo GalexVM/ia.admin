@@ -140,6 +140,7 @@ export async function PUT(req: Request, context: RouteContext) {
             synced_at: new Date(),
             status: "success",
             message: `PUT exitoso a ${targetUrl} (HTTP ${remoteRes.status})`,
+            payload: fullConfigToSync,
           });
           syncResult = {
             syncedDirectly: true,
@@ -153,6 +154,7 @@ export async function PUT(req: Request, context: RouteContext) {
             synced_at: new Date(),
             status: "failed",
             message: `Fallo PUT a ${targetUrl} (HTTP ${remoteRes.status}): ${responseText.slice(0, 300)}`,
+            payload: fullConfigToSync,
           });
           syncResult = {
             syncedDirectly: false,
@@ -168,6 +170,7 @@ export async function PUT(req: Request, context: RouteContext) {
           synced_at: new Date(),
           status: "failed",
           message: `Error al conectar con ${targetUrl}: ${errMsg}`,
+          payload: fullConfigToSync,
         });
         syncResult = {
           syncedDirectly: false,
@@ -182,6 +185,7 @@ export async function PUT(req: Request, context: RouteContext) {
         synced_at: new Date(),
         status: "success",
         message: "Guardado en DB (sin chatbot_url asignada para sincronización remota)",
+        payload: tenant.configuration,
       });
     }
 

@@ -126,6 +126,8 @@ export interface SyncRecord {
   synced_at: Date;
   status: "success" | "failed";
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: Record<string, any>;
 }
 
 export interface ITenantConfig extends Document {
@@ -183,6 +185,7 @@ const TenantConfigSchema = new Schema<ITenantConfig>(
         synced_at: { type: Date, default: Date.now },
         status: { type: String, enum: ["success", "failed"] },
         message: { type: String, default: "" },
+        payload: { type: Schema.Types.Mixed },
       },
     ],
     last_synced_at: {
