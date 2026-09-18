@@ -35,6 +35,7 @@ export default function TenantDetailPage({ params }: PageProps) {
   const [chatbotUrl, setChatbotUrl] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showIntent, setShowIntent] = useState(false);
@@ -130,6 +131,40 @@ export default function TenantDetailPage({ params }: PageProps) {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handlePullConfig = async () => {
+    setIsPulling(true);
+    setFeedbackMessage(null);
+    try {
+      const res = await fetch(`/api/admin/tenants/${id}/pull`);
+      const data = await res.json();
+
+      if (res.ok && data.configuration) {
+        setTenant((prev) => {
+          if (!prev) return prev;
+          return { ...prev, configuration: data.configuration };
+        });
+        setFeedbackMessage({
+          type: "success",
+          text: "✅ Datos cargados exitosamente desde el endpoint",
+        });
+      } else {
+        setFeedbackMessage({
+          type: "error",
+          text: "Error al obtener datos del endpoint",
+          details: data.error || "Error desconocido",
+        });
+      }
+    } catch (err) {
+      setFeedbackMessage({
+        type: "error",
+        text: "Error de red al conectar con el servidor",
+        details: err instanceof Error ? err.message : "Network error",
+      });
+    } finally {
+      setIsPulling(false);
     }
   };
 
@@ -357,6 +392,8 @@ export default function TenantDetailPage({ params }: PageProps) {
           isAdmin={true}
           isSaving={isSaving}
           onSave={handleSaveConfig}
+          onPull={handlePullConfig}
+          isPulling={isPulling}
           saveButtonText="Guardar y Actualizar (/configuration)"
           feedbackMessage={feedbackMessage}
         />

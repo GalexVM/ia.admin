@@ -21,6 +21,7 @@ import {
   Trash2,
   Loader2,
   HelpCircle,
+  Download,
 } from "lucide-react";
 import styles from "./ConfigEditor.module.css";
 import { TenantConfiguration } from "@/models/TenantConfig";
@@ -36,6 +37,8 @@ interface ConfigEditorProps {
     text: string;
     details?: string;
   } | null;
+  onPull?: () => Promise<void>;
+  isPulling?: boolean;
 }
 
 export default function ConfigEditor({
@@ -45,12 +48,19 @@ export default function ConfigEditor({
   onSave,
   saveButtonText = "Guardar y Actualizar (/configuration)",
   feedbackMessage,
+  onPull,
+  isPulling = false,
 }: ConfigEditorProps) {
   const [config, setConfig] = useState<TenantConfiguration>({ ...initialConfig });
   const [activeCategory, setActiveCategory] = useState<string>("cat_identity");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"form" | "json">("form");
   const [rawJsonText, setRawJsonText] = useState(() => JSON.stringify(initialConfig, null, 2));
+
+  React.useEffect(() => {
+    setConfig({ ...initialConfig });
+    setRawJsonText(JSON.stringify(initialConfig, null, 2));
+  }, [initialConfig]);
 
   // Actualizar campo genérico
   const handleFieldChange = (key: keyof TenantConfiguration, value: unknown) => {
@@ -239,6 +249,31 @@ export default function ConfigEditor({
             <Code2 size={15} />
             <span>{viewMode === "form" ? "Ver JSON Raw" : "Modo Formulario"}</span>
           </button>
+
+          {onPull && (
+            <button
+              type="button"
+              disabled={isPulling}
+              onClick={onPull}
+              className={styles.viewModeBtn}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 16px",
+                borderRadius: 6,
+                border: "1px solid var(--border-color)",
+                background: "var(--bg-card)",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                color: "var(--text-primary)"
+              }}
+            >
+              {isPulling ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+              <span>{isPulling ? "Obteniendo..." : "Traer de Endpoint"}</span>
+            </button>
+          )}
 
           <button
             type="button"
