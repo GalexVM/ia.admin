@@ -162,10 +162,7 @@ export default function SetupWizardPage({ params }: SetupPageProps) {
       <div className={styles.container}>
         {/* Header */}
         <div className={styles.header}>
-          <div className={styles.brandBadge}>
-            <Sparkles size={14} />
-            <span>Zefiron Bot Provisioning</span>
-          </div>
+          
           <h1 className={styles.pageTitle}>Portal de Configuración de Asistente</h1>
           <p className={styles.pageSubtitle}>
             Personaliza la identidad, tono de voz, reglas comerciales y agendamiento de citas para{" "}

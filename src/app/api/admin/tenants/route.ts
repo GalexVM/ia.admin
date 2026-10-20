@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { connectToDatabase } from "@/lib/db";
-import { TenantConfig } from "@/models/TenantConfig";
+import { TenantConfig, DEFAULT_TENANT_CONFIGURATION } from "@/models/TenantConfig";
 
 export async function GET() {
   try {
@@ -28,21 +28,17 @@ export async function POST(req: Request) {
 
     // Generar un token único y amigable para URLs (12 bytes hex)
     const token = crypto.randomBytes(8).toString("hex");
+    const resolvedCompanyName = company_name?.trim() || "Nuevo Cliente";
 
     const newTenant = await TenantConfig.create({
       token,
-      company_name: company_name?.trim() || "Nuevo Cliente",
-      chatbot_name: "Zefiron Bot",
+      company_name: resolvedCompanyName,
+      chatbot_name: "Zefi",
       chatbot_url: chatbot_url?.trim() || "",
       status: "pending_onboarding",
       configuration: {
-        company_name: company_name?.trim() || "",
-        chatbot_name: "Zefiron Bot",
-        writing_tone: "REGULAR",
-        enable_budget: true,
-        enable_module_visit: true,
-        enabled_scoring: true,
-        // Al quedar vacío, el frontend (o Python) rellenará el resto.
+        ...DEFAULT_TENANT_CONFIGURATION,
+        company_name: resolvedCompanyName,
       },
     });
 

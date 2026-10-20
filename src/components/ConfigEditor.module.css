@@ -865,4 +865,57 @@ button:disabled {
   border-color: var(--brand-border);
 }
 
+.defaultBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.defaultBadgeWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  border-radius: var(--radius-xs);
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+.inputDefaultWarn {
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  background-color: rgba(245, 158, 11, 0.02) !important;
+}
+
+.inputDefaultWarn:focus {
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
+}
+
+.defaultWarningBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 24px;
+  font-size: 0.825rem;
+  color: #b45309;
+  line-height: 1.4;
+}
+
+
+
 

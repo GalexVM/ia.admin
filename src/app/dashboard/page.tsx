@@ -22,7 +22,7 @@ import {
   Sliders,
 } from "lucide-react";
 import styles from "./dashboard.module.css";
-import { TenantStatus } from "@/models/TenantConfig";
+import { TenantStatus } from "@/types/tenant";
 
 interface TenantItem {
   _id: string;

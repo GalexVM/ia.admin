@@ -35,7 +35,20 @@ import {
   OptionButton,
   GreetingMessageConfig,
   MessageCountScore,
-} from "@/models/TenantConfig";
+  DEFAULT_TENANT_CONFIGURATION,
+} from "@/types/tenant";
+
+const populateDefaults = (raw?: TenantConfiguration | null): TenantConfiguration => {
+  const merged: TenantConfiguration = { ...DEFAULT_TENANT_CONFIGURATION };
+  if (raw && typeof raw === "object") {
+    for (const [key, val] of Object.entries(raw)) {
+      if (val !== undefined && val !== null) {
+        merged[key] = val;
+      }
+    }
+  }
+  return merged;
+};
 
 const normalizeCustomGreeting = (
   raw?: GreetingMessageConfig | string | null
@@ -119,17 +132,62 @@ export default function ConfigEditor({
   onPull,
   isPulling = false,
 }: ConfigEditorProps) {
-  const [config, setConfig] = useState<TenantConfiguration>({ ...initialConfig });
+  const [config, setConfig] = useState<TenantConfiguration>(() => populateDefaults(initialConfig));
   const [activeCategory, setActiveCategory] = useState<string>("cat_identity");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"form" | "json">("form");
-  const [rawJsonText, setRawJsonText] = useState(() => JSON.stringify(initialConfig, null, 2));
+  const [rawJsonText, setRawJsonText] = useState(() =>
+    JSON.stringify(populateDefaults(initialConfig), null, 2)
+  );
 
   React.useEffect(() => {
+    const merged = populateDefaults(initialConfig);
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setConfig({ ...initialConfig });
-    setRawJsonText(JSON.stringify(initialConfig, null, 2));
+    setConfig(merged);
+    setRawJsonText(JSON.stringify(merged, null, 2));
   }, [initialConfig]);
+
+  // Helper para verificar si un campo conserva su valor por defecto del sistema
+  const isAtDefault = (key: keyof TenantConfiguration): boolean => {
+    const current = config[key];
+    const def = DEFAULT_TENANT_CONFIGURATION[key];
+    if (def === undefined || def === null || def === "") return false;
+    if (Array.isArray(def)) {
+      if (def.length === 0) return false;
+      return Array.isArray(current) && JSON.stringify(current) === JSON.stringify(def);
+    }
+    if (typeof def === "object") {
+      return (
+        typeof current === "object" &&
+        current !== null &&
+        JSON.stringify(current) === JSON.stringify(def)
+      );
+    }
+    return current === def;
+  };
+
+  // Claves con valores de prueba/ejemplo de la empresa (visibles y editables por el cliente)
+  const CLIENT_WARN_DEFAULT_KEYS: (keyof TenantConfiguration)[] = [
+    "company_name",
+    "company_address",
+    "company_coords",
+  ];
+
+  // Claves técnicas avanzadas (solo visibles para desarrolladores en Categoría 10)
+  const DEV_WARN_DEFAULT_KEYS: (keyof TenantConfiguration)[] = [
+    "email_jefe_comercial",
+    "fallback_agent",
+  ];
+
+  const isWarnDefault = (key: keyof TenantConfiguration): boolean => {
+    return (
+      (CLIENT_WARN_DEFAULT_KEYS.includes(key) || DEV_WARN_DEFAULT_KEYS.includes(key)) &&
+      isAtDefault(key)
+    );
+  };
+
+  // Solo contamos los campos de empresa/cliente en el banner general (excluye dev/avanzado)
+  const activeClientWarnDefaults = CLIENT_WARN_DEFAULT_KEYS.filter((k) => isWarnDefault(k));
 
   // Actualizar campo genérico
   const handleFieldChange = (key: keyof TenantConfiguration, value: unknown) => {
@@ -361,11 +419,11 @@ export default function ConfigEditor({
 
   // Rango horario de visitas
   const visitStart = config.range_available_visit?.start || "09:00";
-  const visitEnd = config.range_available_visit?.end || "18:00";
+  const visitEnd = config.range_available_visit?.end || "16:00";
 
   const updateVisitRange = (key: "start" | "end", val: string) => {
     handleFieldChange("range_available_visit", {
-      ...(config.range_available_visit || { start: "09:00", end: "18:00" }),
+      ...(config.range_available_visit || { start: "09:00", end: "16:00" }),
       [key]: val,
     });
   };
@@ -771,6 +829,15 @@ export default function ConfigEditor({
 
           {/* Área de Campos */}
           <main className={styles.contentArea}>
+            {activeClientWarnDefaults.length > 0 && (
+              <div className={styles.defaultWarningBanner}>
+                <AlertCircle size={18} color="#d97706" style={{ minWidth: 18 }} />
+                <span>
+                  Hay <strong>{activeClientWarnDefaults.length} campo{activeClientWarnDefaults.length > 1 ? "s" : ""} con valores de ejemplo por defecto</strong> que se recomienda personalizar para tu empresa (marcados con ⚠️).
+                </span>
+              </div>
+            )}
+
             {/* Categoría 1: Identidad y Configuración Base */}
             {(activeCategory === "cat_identity" || searchQuery) && (
               <div style={{ marginBottom: 36 }}>
@@ -787,12 +854,22 @@ export default function ConfigEditor({
                 <div className={styles.fieldsGrid}>
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Nombre de la Empresa</label>
+                      <label className={styles.label}>
+                        Nombre de la Empresa
+                        {isWarnDefault("company_name") && (
+                          <span
+                            className={styles.defaultBadgeWarn}
+                            title="Nombre genérico por defecto. Reemplázalo con el nombre de tu empresa"
+                          >
+                            ⚠️ Por defecto (cambiar)
+                          </span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>company_name</span>
                     </div>
                     <input
                       type="text"
-                      className={styles.input}
+                      className={`${styles.input} ${isWarnDefault("company_name") ? styles.inputDefaultWarn : ""}`}
                       value={config.company_name || ""}
                       onChange={(e) => handleFieldChange("company_name", e.target.value)}
                       placeholder="Ej. Inmobiliaria Panorama"
@@ -801,7 +878,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Nombre del Chatbot</label>
+                      <label className={styles.label}>
+                        Nombre del Chatbot
+                        {isAtDefault("chatbot_name") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>chatbot_name</span>
                     </div>
                     <input
@@ -809,18 +891,28 @@ export default function ConfigEditor({
                       className={styles.input}
                       value={config.chatbot_name || ""}
                       onChange={(e) => handleFieldChange("chatbot_name", e.target.value)}
-                      placeholder="Ej. Zefiron Bot"
+                      placeholder="Ej. Zefi"
                     />
                   </div>
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Dirección Física</label>
+                      <label className={styles.label}>
+                        Dirección Física
+                        {isWarnDefault("company_address") && (
+                          <span
+                            className={styles.defaultBadgeWarn}
+                            title="Dirección por defecto de Zefiron (Arequipa). Reemplázala con la dirección real de tu empresa"
+                          >
+                            ⚠️ Por defecto (cambiar)
+                          </span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>company_address</span>
                     </div>
                     <input
                       type="text"
-                      className={styles.input}
+                      className={`${styles.input} ${isWarnDefault("company_address") ? styles.inputDefaultWarn : ""}`}
                       value={config.company_address || ""}
                       onChange={(e) => handleFieldChange("company_address", e.target.value)}
                       placeholder="Ej. Av. Javier Prado Este 456, San Isidro"
@@ -829,7 +921,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Tono de Redacción</label>
+                      <label className={styles.label}>
+                        Tono de Redacción
+                        {isAtDefault("writing_tone") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>writing_tone</span>
                     </div>
                     <select
@@ -844,7 +941,17 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Coordenadas GPS de la oficina (Lat / Lng)</label>
+                      <label className={styles.label}>
+                        Coordenadas GPS de la oficina (Lat / Lng)
+                        {isWarnDefault("company_coords") && (
+                          <span
+                            className={styles.defaultBadgeWarn}
+                            title="Coordenadas de ejemplo (Arequipa). Reemplázalas con la ubicación real de tu oficina"
+                          >
+                            ⚠️ Por defecto (cambiar)
+                          </span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>company_coords</span>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -853,14 +960,14 @@ export default function ConfigEditor({
                         placeholder="Latitud (ej. -12.0463)"
                         value={coordsLat}
                         onChange={(e) => updateCoord(0, e.target.value)}
-                        className={styles.input}
+                        className={`${styles.input} ${isWarnDefault("company_coords") ? styles.inputDefaultWarn : ""}`}
                       />
                       <input
                         type="text"
                         placeholder="Longitud (ej. -77.0427)"
                         value={coordsLng}
                         onChange={(e) => updateCoord(1, e.target.value)}
-                        className={styles.input}
+                        className={`${styles.input} ${isWarnDefault("company_coords") ? styles.inputDefaultWarn : ""}`}
                       />
                     </div>
                   </div>
@@ -1101,18 +1208,23 @@ export default function ConfigEditor({
                 <div style={{ marginBottom: 20 }}>
                   <div className={styles.formGroup} style={{ maxWidth: 360 }}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Política de Precios Unitarios</label>
+                      <label className={styles.label}>
+                        Política de Precios Unitarios
+                        {isAtDefault("price_policy") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>price_policy</span>
                     </div>
                     <select
                       className={styles.select}
-                      value={config.price_policy || "TOTAL_PRICE"}
+                      value={config.price_policy || "NONE"}
                       onChange={(e) => handleFieldChange("price_policy", e.target.value)}
                     >
+                      <option value="NONE">No Revelar Precios (NONE)</option>
                       <option value="RANGE">Mostrar Rango de Precio (RANGE)</option>
                       <option value="EXACT">Mostrar Precio Exacto (EXACT)</option>
                       <option value="STARTING_FROM">Mostrar Precio desde (STARTING_FROM)</option>
-                      <option value="NONE">No Revelar Precios (NONE)</option>
                     </select>
                   </div>
                 </div>
@@ -1180,6 +1292,9 @@ export default function ConfigEditor({
                       <div className={styles.labelWrapper}>
                         <label className={styles.label}>
                           Modo de Presupuesto
+                          {isAtDefault("budget_mode") && (
+                            <span className={styles.defaultBadge}>Por defecto</span>
+                          )}
                           {!isBudgetEnabled && <span className={styles.disabledBadge}>Bloqueado</span>}
                         </label>
                         <span className={styles.labelKey}>budget_mode</span>
@@ -1368,6 +1483,9 @@ export default function ConfigEditor({
                     <div className={styles.labelWrapper}>
                       <label className={styles.label}>
                         Días desde los que se agendará
+                        {isAtDefault("days_available_visit") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
                         {!isVisitEnabled && <span className={styles.disabledBadge}>Bloqueado</span>}
                       </label>
                       <span className={styles.labelKey}>days_available_visit</span>
@@ -1376,7 +1494,7 @@ export default function ConfigEditor({
                       type="number"
                       disabled={!isVisitEnabled}
                       className={styles.input}
-                      value={config.days_available_visit ?? 7}
+                      value={config.days_available_visit ?? 0}
                       onChange={(e) => handleFieldChange("days_available_visit", Number(e.target.value))}
                     />
                     <span className={styles.helpText}>Si es 0, el agente agendará desde el mismo dia hacia adelante. Si es 1, agendará desde el día siguiente para adelante.</span>
@@ -1386,6 +1504,9 @@ export default function ConfigEditor({
                     <div className={styles.labelWrapper}>
                       <label className={styles.label}>
                         Horario de Atención (Inicio / Fin)
+                        {isAtDefault("range_available_visit") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
                         {!isVisitEnabled && <span className={styles.disabledBadge}>Bloqueado</span>}
                       </label>
                       <span className={styles.labelKey}>range_available_visit</span>
@@ -1413,6 +1534,9 @@ export default function ConfigEditor({
                     <div className={styles.labelWrapper}>
                       <label className={styles.label}>
                         Duración de la Cita (Minutos)
+                        {isAtDefault("appointment_duration") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
                         {!isVisitEnabled && <span className={styles.disabledBadge}>Bloqueado</span>}
                       </label>
                       <span className={styles.labelKey}>appointment_duration</span>
@@ -1421,7 +1545,7 @@ export default function ConfigEditor({
                       type="number"
                       disabled={!isVisitEnabled}
                       className={styles.input}
-                      value={config.appointment_duration ?? 30}
+                      value={config.appointment_duration ?? 60}
                       onChange={(e) => handleFieldChange("appointment_duration", Number(e.target.value))}
                     />
                   </div>
@@ -1430,6 +1554,9 @@ export default function ConfigEditor({
                     <div className={styles.labelWrapper}>
                       <label className={styles.label}>
                         Modo de Selección de Fecha
+                        {isAtDefault("seleccion_mode_date") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
                         {!isVisitEnabled && <span className={styles.disabledBadge}>Bloqueado</span>}
                       </label>
                       <span className={styles.labelKey}>seleccion_mode_date</span>
@@ -1612,7 +1739,12 @@ export default function ConfigEditor({
                 <div className={styles.fieldsGrid} style={{ marginBottom: 20 }}>
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Ventana de Sesión (segundos)</label>
+                      <label className={styles.label}>
+                        Ventana de Sesión (segundos)
+                        {isAtDefault("user_session_window") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>user_session_window</span>
                     </div>
                     <input
@@ -1628,13 +1760,18 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Refresco de Información (Horas)</label>
+                      <label className={styles.label}>
+                        Refresco de Información (Horas)
+                        {isAtDefault("info_refresh_time") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>info_refresh_time</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.info_refresh_time ?? 24}
+                      value={config.info_refresh_time ?? 1}
                       onChange={(e) => handleFieldChange("info_refresh_time", Number(e.target.value))}
                     />
                     <span className={styles.helpText}>
@@ -1644,13 +1781,18 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Horas antes de Recontactar (Base)</label>
+                      <label className={styles.label}>
+                        Horas antes de Recontactar (Base)
+                        {isAtDefault("recontact_hours") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>recontact_hours</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.recontact_hours ?? 24}
+                      value={config.recontact_hours ?? 5}
                       onChange={(e) => handleFieldChange("recontact_hours", Number(e.target.value))}
                     />
                     <span className={styles.helpText}>
@@ -1660,13 +1802,18 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Máximo de Recontactos</label>
+                      <label className={styles.label}>
+                        Máximo de Recontactos
+                        {isAtDefault("recontact_times") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>recontact_times</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.recontact_times ?? (recontactList.length || 2)}
+                      value={config.recontact_times ?? (recontactList.length || 3)}
                       onChange={(e) => handleFieldChange("recontact_times", Number(e.target.value))}
                     />
                     <span className={styles.helpText}>
@@ -2107,7 +2254,12 @@ export default function ConfigEditor({
                 <div className={styles.fieldsGrid} style={{ marginBottom: 20 }}>
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Timeout Bloqueo Corto (Horas)</label>
+                      <label className={styles.label}>
+                        Timeout Bloqueo Corto (Horas)
+                        {isAtDefault("blacklist_short_timeout") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>blacklist_short_timeout</span>
                     </div>
                     <input
@@ -2121,7 +2273,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Timeout Bloqueo Largo (Horas)</label>
+                      <label className={styles.label}>
+                        Timeout Bloqueo Largo (Horas)
+                        {isAtDefault("blacklist_large_timeout") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>blacklist_large_timeout</span>
                     </div>
                     <input
@@ -2250,7 +2407,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Actividad Urgente de Fallback</label>
+                      <label className={styles.label}>
+                        Actividad Urgente de Fallback
+                        {isAtDefault("fallback_urgent_activity") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>fallback_urgent_activity</span>
                     </div>
                     <input
@@ -2267,7 +2429,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Tag Urgencia Agendamiento</label>
+                      <label className={styles.label}>
+                        Tag Urgencia Agendamiento
+                        {isAtDefault("fallback_urgent_tag_schedule") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>fallback_urgent_tag_schedule</span>
                     </div>
                     <input
@@ -2284,7 +2451,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Tag Usuario Frustrado</label>
+                      <label className={styles.label}>
+                        Tag Usuario Frustrado
+                        {isAtDefault("fallback_urgent_tag_frustrated") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>fallback_urgent_tag_frustrated</span>
                     </div>
                     <input
@@ -2301,7 +2473,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Tag Error de Sistema</label>
+                      <label className={styles.label}>
+                        Tag Error de Sistema
+                        {isAtDefault("fallback_urgent_tag_error") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>fallback_urgent_tag_error</span>
                     </div>
                     <input
@@ -2318,7 +2495,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Tag CTWA Interés en Otro Proyecto</label>
+                      <label className={styles.label}>
+                        Tag CTWA Interés en Otro Proyecto
+                        {isAtDefault("fallback_ctwa_changed_project_tag") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>fallback_ctwa_changed_project_tag</span>
                     </div>
                     <input
@@ -2409,7 +2591,12 @@ export default function ConfigEditor({
                 <div className={styles.fieldsGrid} style={{ marginBottom: 20 }}>
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Modelo LLM Inteligente</label>
+                      <label className={styles.label}>
+                        Modelo LLM Inteligente
+                        {isAtDefault("model_smart_llm") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>model_smart_llm</span>
                     </div>
                     <input
@@ -2423,7 +2610,12 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Modelo LLM Rápido</label>
+                      <label className={styles.label}>
+                        Modelo LLM Rápido
+                        {isAtDefault("model_fast_llm") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>model_fast_llm</span>
                     </div>
                     <input
@@ -2437,12 +2629,22 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Email Jefe Comercial</label>
+                      <label className={styles.label}>
+                        Email Jefe Comercial
+                        {isWarnDefault("email_jefe_comercial") && (
+                          <span
+                            className={styles.defaultBadgeWarn}
+                            title="Correo de ejemplo de desarrollo. Reemplázalo con el correo del jefe comercial de la empresa"
+                          >
+                            ⚠️ Por defecto (cambiar)
+                          </span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>email_jefe_comercial</span>
                     </div>
                     <input
                       type="email"
-                      className={styles.input}
+                      className={`${styles.input} ${isWarnDefault("email_jefe_comercial") ? styles.inputDefaultWarn : ""}`}
                       value={config.email_jefe_comercial || ""}
                       onChange={(e) => handleFieldChange("email_jefe_comercial", e.target.value)}
                       placeholder="jefe.comercial@empresa.com"
@@ -2451,12 +2653,22 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Agente Humano de Fallback</label>
+                      <label className={styles.label}>
+                        Agente Humano de Fallback
+                        {isWarnDefault("fallback_agent") && (
+                          <span
+                            className={styles.defaultBadgeWarn}
+                            title="UUID de agente de ejemplo del demo. Debe cambiarse por el ID del asesor real en Zefiron"
+                          >
+                            ⚠️ Por defecto (cambiar)
+                          </span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>fallback_agent</span>
                     </div>
                     <input
                       type="text"
-                      className={styles.input}
+                      className={`${styles.input} ${isWarnDefault("fallback_agent") ? styles.inputDefaultWarn : ""}`}
                       value={config.fallback_agent || ""}
                       onChange={(e) => handleFieldChange("fallback_agent", e.target.value)}
                       placeholder="Ej. asesor_central"
@@ -2465,33 +2677,48 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Flood: Máx Mensajes</label>
+                      <label className={styles.label}>
+                        Flood: Máx Mensajes
+                        {isAtDefault("flood_max_messages") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>flood_max_messages</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.flood_max_messages ?? 10}
+                      value={config.flood_max_messages ?? 5}
                       onChange={(e) => handleFieldChange("flood_max_messages", Number(e.target.value))}
                     />
                   </div>
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Flood: Ventana (Segundos)</label>
+                      <label className={styles.label}>
+                        Flood: Ventana (Segundos)
+                        {isAtDefault("flood_window_seconds") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>flood_window_seconds</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.flood_window_seconds ?? 60}
+                      value={config.flood_window_seconds ?? 10}
                       onChange={(e) => handleFieldChange("flood_window_seconds", Number(e.target.value))}
                     />
                   </div>
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Flood: Cooldown (Segundos)</label>
+                      <label className={styles.label}>
+                        Flood: Cooldown (Segundos)
+                        {isAtDefault("flood_cooldown_seconds") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>flood_cooldown_seconds</span>
                     </div>
                     <input
@@ -2504,26 +2731,36 @@ export default function ConfigEditor({
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Tokens por Respuesta</label>
+                      <label className={styles.label}>
+                        Tokens por Respuesta
+                        {isAtDefault("toker_per_response") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>toker_per_response</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.toker_per_response ?? 250}
+                      value={config.toker_per_response ?? 150}
                       onChange={(e) => handleFieldChange("toker_per_response", Number(e.target.value))}
                     />
                   </div>
 
                   <div className={styles.formGroup}>
                     <div className={styles.labelWrapper}>
-                      <label className={styles.label}>Frecuencia Chequeo Recontactos (Minutos)</label>
+                      <label className={styles.label}>
+                        Frecuencia Chequeo Recontactos (Minutos)
+                        {isAtDefault("recontact_check_minutes") && (
+                          <span className={styles.defaultBadge}>Por defecto</span>
+                        )}
+                      </label>
                       <span className={styles.labelKey}>recontact_check_minutes</span>
                     </div>
                     <input
                       type="number"
                       className={styles.input}
-                      value={config.recontact_check_minutes ?? 15}
+                      value={config.recontact_check_minutes ?? 1}
                       onChange={(e) => handleFieldChange("recontact_check_minutes", Number(e.target.value))}
                     />
                     <span className={styles.helpText}>
@@ -2537,6 +2774,9 @@ export default function ConfigEditor({
                   <div className={styles.labelWrapper}>
                     <label className={styles.label} style={{ fontSize: "0.95rem" }}>
                       Puntaje por Conteo de Mensajes (Scoring de Interacción)
+                      {isAtDefault("message_count_score") && (
+                        <span className={styles.defaultBadge}>Por defecto</span>
+                      )}
                     </label>
                     <span className={styles.labelKey}>message_count_score</span>
                   </div>

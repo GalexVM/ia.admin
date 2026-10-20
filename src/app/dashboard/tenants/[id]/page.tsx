@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import styles from "./tenant-view.module.css";
 import ConfigEditor from "@/components/ConfigEditor";
-import { ITenantConfig, TenantConfiguration, TenantStatus } from "@/models/TenantConfig";
+import { ITenantConfig, TenantConfiguration, TenantStatus } from "@/types/tenant";
 
 interface PageProps {
   params: Promise<{ id: string }>;
