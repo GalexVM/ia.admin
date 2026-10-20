@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   Server,
-  Shield,
   ExternalLink,
   Copy,
   Check,
@@ -16,7 +15,6 @@ import {
   Layers,
   AlertTriangle,
   Loader2,
-  Send,
 } from "lucide-react";
 import styles from "./tenant-view.module.css";
 import ConfigEditor from "@/components/ConfigEditor";
@@ -72,7 +70,9 @@ export default function TenantDetailPage({ params }: PageProps) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadTenant();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Manejador de guardado y PUT a /configuration
@@ -138,13 +138,13 @@ export default function TenantDetailPage({ params }: PageProps) {
     setIsPulling(true);
     setFeedbackMessage(null);
     try {
-      const res = await fetch(`/api/admin/tenants/${id}/pull`);
+      const res = await fetch(`/api/admin/tenants/${id}?pull=true`);
       const data = await res.json();
 
       if (res.ok && data.configuration) {
         setTenant((prev) => {
           if (!prev) return prev;
-          return { ...prev, configuration: data.configuration };
+          return { ...prev, configuration: data.configuration } as ITenantConfig;
         });
         setFeedbackMessage({
           type: "success",

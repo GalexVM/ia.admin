@@ -6,14 +6,14 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     command: npm run dev -- -H 0.0.0.0
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://navia:Zefiron1!@mongo:27017/admin_ia?authSource=admin
-      - ADMIN_PASSWORD=admin123456
-      - JWT_SECRET=zefiron_admin_ia_jwt_super_secret_key_2026_x99
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - MONGODB_URI=${MONGODB_URI:-mongodb://navia:Zefiron1!@mongo:27017/admin_ia?authSource=admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123456}
+      - JWT_SECRET=${JWT_SECRET:-zefiron_admin_ia_jwt_super_secret_key_2026_x99}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:${PORT:-3000}}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

@@ -448,3 +448,421 @@
   border: 1px solid var(--brand-border);
   color: var(--brand-primary);
 }
+
+/* Estados Deshabilitados y Dependencias */
+.input:disabled,
+.select:disabled,
+.textarea:disabled,
+button:disabled {
+  background: var(--bg-subtle) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-default) !important;
+  cursor: default !important;
+  opacity: 0.65;
+  box-shadow: none !important;
+}
+
+.formGroupDisabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.formGroupDisabled .label {
+  color: var(--text-secondary);
+}
+
+.toggleCardDisabled {
+  opacity: 0.45;
+  cursor: default !important;
+  background: var(--bg-subtle) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+.toggleCardDisabled:hover {
+  border-color: var(--border-default) !important;
+  background: var(--bg-subtle) !important;
+  cursor: default !important;
+}
+
+.toggleCardDisabled .toggleLabel {
+  color: var(--text-secondary) !important;
+}
+
+.toggleCardDisabled .toggleDesc {
+  color: var(--text-muted) !important;
+}
+
+.toggleCardDisabled .switch {
+  background: var(--border-strong) !important;
+  opacity: 0.5;
+}
+
+.disabledBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  margin-left: 8px;
+  border: 1px solid var(--border-strong);
+}
+
+.disabledNotice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* Recontactos v2 */
+.recontactContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.windowSummaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  transition: all var(--transition-fast);
+}
+
+.windowSummaryCardSafe {
+  border-color: #a7f3d0;
+  background: #f0fdf4;
+}
+
+.windowSummaryCardWarn {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.windowSummaryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.windowSummaryTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.windowProgressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.windowProgressFill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: var(--radius-full);
+}
+
+.windowSummaryHint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.recontactCard {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.recontactCard:hover {
+  border-color: var(--border-strong);
+}
+
+.recontactCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.recontactHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stepBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  letter-spacing: 0.02em;
+}
+
+.recontactDelayInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.delayInput {
+  width: 65px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.delayInput:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-glow);
+  outline: none;
+}
+
+.recontactCardBody {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mediaSection {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mediaTypeSelector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mediaTypeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mediaTypeBtn:hover {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.mediaTypeBtnActive {
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--brand-primary) !important;
+  font-weight: 600 !important;
+}
+
+.mediaSuggestionsBox {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  border: 1px dashed var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mediaSuggestionsTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.hostLinkList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hostLinkPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.hostLinkPill:hover {
+  background: var(--brand-surface);
+  border-color: var(--brand-border);
+  text-decoration: underline;
+}
+
+.mediaSuggestionsNote {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.mediaPreviewBox {
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mediaPreviewImg {
+  max-width: 140px;
+  max-height: 90px;
+  object-fit: cover;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+}
+
+.buttonsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 14px;
+}
+
+.buttonsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.buttonsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.buttonRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buttonInput {
+  flex: 1;
+}
+
+.buttonIdInput {
+  width: 150px;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.addButtonBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--brand-primary);
+  border: 1px dashed var(--brand-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.addButtonBtn:hover:not(:disabled) {
+  background: var(--brand-surface);
+  border-style: solid;
+}
+
+.addButtonBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: var(--border-default);
+  color: var(--text-muted);
+}
+
+.addRecontactStepBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--brand-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.addRecontactStepBtn:hover {
+  background: var(--brand-surface);
+  border-color: var(--brand-border);
+}
+
+

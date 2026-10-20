@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { TenantConfig } from "@/models/TenantConfig";
 
@@ -6,7 +6,7 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(req: Request, context: RouteContext) {
+export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params;
 
@@ -15,6 +15,58 @@ export async function GET(req: Request, context: RouteContext) {
     }
 
     await connectToDatabase();
+    const isPull = req.nextUrl?.searchParams?.get("pull") === "true" ||
+      new URL(req.url, "http://localhost:3000").searchParams.get("pull") === "true";
+
+    if (isPull) {
+      const tenant = await TenantConfig.findById(id);
+      if (!tenant) {
+        return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
+      }
+
+      if (!tenant.chatbot_url || !tenant.chatbot_url.trim().startsWith("http")) {
+        return NextResponse.json(
+          { error: "El tenant no tiene chatbot_url configurado" },
+          { status: 400 }
+        );
+      }
+
+      const rawUrl = tenant.chatbot_url.trim();
+      const targetUrl = rawUrl.endsWith("/configuration")
+        ? rawUrl
+        : `${rawUrl.replace(/\/+$/, "")}/configuration`;
+
+      const getRes = await fetch(targetUrl, {
+        method: "GET",
+        headers: { accept: "application/json" },
+        cache: "no-store",
+      });
+
+      if (!getRes.ok) {
+        return NextResponse.json(
+          { error: `El endpoint remoto devolvió HTTP ${getRes.status}` },
+          { status: getRes.status }
+        );
+      }
+
+      const remoteConfig = await getRes.json();
+
+      // Guardar también en Mongo para mantener la base de datos sincronizada
+      tenant.configuration = {
+        ...(tenant.configuration || {}),
+        ...remoteConfig,
+      };
+      tenant.markModified("configuration");
+      tenant.last_synced_at = new Date();
+      await tenant.save();
+
+      return NextResponse.json({
+        success: true,
+        configuration: remoteConfig,
+        tenant: tenant.toObject ? tenant.toObject() : tenant,
+      });
+    }
+
     const tenant = await TenantConfig.findById(id).lean();
 
     if (!tenant) {
@@ -23,9 +75,9 @@ export async function GET(req: Request, context: RouteContext) {
 
     return NextResponse.json({ success: true, tenant });
   } catch (error) {
-    console.error("Error al obtener tenant:", error);
+    console.error("Error al obtener tenant o consultar endpoint:", error);
     return NextResponse.json(
-      { error: "Error interno al obtener el tenant" },
+      { error: "Error interno al obtener el tenant o consultar el endpoint" },
       { status: 500 }
     );
   }
@@ -89,9 +141,9 @@ export async function PUT(req: Request, context: RouteContext) {
         ? rawUrl
         : `${rawUrl.replace(/\/+$/, "")}/configuration`;
 
+      let fullConfigToSync = tenant.configuration;
       try {
         // 1. Obtener configuración actual del bot para evitar error 422 por campos faltantes
-        let fullConfigToSync = tenant.configuration;
         try {
           const getRes = await fetch(targetUrl, {
             method: "GET",
@@ -101,6 +153,10 @@ export async function PUT(req: Request, context: RouteContext) {
             const remoteConfig = await getRes.json();
             if (remoteConfig && typeof remoteConfig === "object") {
               fullConfigToSync = { ...remoteConfig, ...tenant.configuration };
+              // Sanitizar campos problemáticos para Pydantic
+              if (fullConfigToSync.custom_handoff_message === null || fullConfigToSync.custom_handoff_message === undefined) {
+                fullConfigToSync.custom_handoff_message = "";
+              }
               // También guardamos la config completa en la BD
               tenant.configuration = fullConfigToSync;
               tenant.markModified("configuration");
@@ -108,6 +164,13 @@ export async function PUT(req: Request, context: RouteContext) {
           }
         } catch (getErr) {
           console.warn("No se pudo obtener config remota previa al PUT:", getErr);
+        }
+
+        // Asegurar que custom_handoff_message sea string válido antes del PUT
+        if (fullConfigToSync && typeof fullConfigToSync === "object") {
+          if (fullConfigToSync.custom_handoff_message === null || fullConfigToSync.custom_handoff_message === undefined) {
+            fullConfigToSync.custom_handoff_message = "";
+          }
         }
 
         const controller = new AbortController();

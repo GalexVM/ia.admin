@@ -4,6 +4,41 @@ export type TenantStatus = "pending_onboarding" | "configured" | "synced" | "err
 export type WritingTone = "REGULAR" | "POLITE";
 export type UnitPricePolicy = "NONE" | "TOTAL_PRICE" | "PRICE_M2";
 
+export interface OptionButton {
+  id: string;
+  label: string;
+  action?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: Record<string, any>;
+}
+
+export interface RecontactMessageConfig {
+  message: string;
+  delay_hours?: number;
+  options?: (string | OptionButton)[];
+  media_url?: string;
+  media_type?: "image" | "audio";
+}
+
+export interface GreetingMessageConfig {
+  message: string;
+  options?: "BUY_PURPOSE" | string;
+  picture?: string;
+  delay_hours?: number;
+}
+
+export type DateModeSelection =
+  | "ALL"
+  | "SATURDAY"
+  | "WEEKEND"
+  | "BUSINESS_DAYS"
+  | "EXCEPT_SATURDAY";
+
+export interface MessageCountScore {
+  threshold: number;
+  points: number;
+}
+
 export interface TenantConfiguration {
   // 1. Identidad y configuración base
   company_name?: string;
@@ -12,6 +47,11 @@ export interface TenantConfiguration {
   chatbot_name?: string;
   personality_prompt?: string;
   writing_tone?: WritingTone;
+  enable_custom_greeting?: boolean;
+  custom_greeting?: GreetingMessageConfig | string;
+  prioritary_greeting?: boolean;
+  mention_zone_in_greeting?: boolean;
+  mention_region_in_address?: boolean;
 
   // 2. Información que el bot puede revelar
   price_policy?: UnitPricePolicy;
@@ -31,6 +71,7 @@ export interface TenantConfiguration {
   shows_assesor_name?: boolean;
   offers_principal_zones?: boolean;
   include_brochure_in_info?: boolean;
+  simplify_info_message?: boolean;
 
   // 3. Captura de datos del lead
   enable_name_completed?: boolean;
@@ -40,15 +81,19 @@ export interface TenantConfiguration {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ranges_predefined?: Record<string, any>[];
   asks_about_purpose?: boolean;
+  ask_about_purpose_inline?: boolean;
   asks_name_from_the_beggining?: boolean;
+  asks_name_from_the_beggining_formal?: boolean;
   asks_investment_time?: boolean;
+  asks_buy_method_intent?: boolean;
+  fast_financing_derivation?: boolean;
 
   // 4. Agendamiento y citas
   enable_module_visit?: boolean;
   uses_google_calendar?: boolean;
   days_available_visit?: number;
   range_available_visit?: Record<string, string>;
-  seleccion_mode_date?: string;
+  seleccion_mode_date?: DateModeSelection | string;
   duration_date?: number;
   appointment_duration?: number;
   chooses_activity?: boolean;
@@ -65,9 +110,12 @@ export interface TenantConfiguration {
   info_refresh_time?: number;
   recontact_hours?: number;
   recontact_times?: number;
+  custom_recontact_delays?: boolean;
+  recontact_messages?: (string | RecontactMessageConfig)[];
+  session_window_closing_message?: boolean;
 
   // 7. Seguridad y bloqueos
-  phrases_to_avoid?: string;
+  phrases_to_avoid?: string | string[];
   blacklist_short_timeout?: number;
   blacklist_large_timeout?: number;
 
@@ -77,11 +125,19 @@ export interface TenantConfiguration {
   fallback_urgent_tag_schedule?: string;
   fallback_urgent_tag_frustrated?: string;
   fallback_urgent_tag_error?: string;
+  fallback_ctwa_changed_project_tag?: string;
+  custom_handoff_message?: string;
 
   // 9. Stickers Zefi
   uses_stickers?: boolean;
 
   // 10. Developer only
+  accept_all_projects?: boolean;
+  accept_all_proyects?: boolean;
+  recontact_check_minutes?: number;
+  inyects_agent_name_in_following_message?: boolean;
+  send_closing_and_agent_notice_only_once?: boolean;
+  message_count_score?: MessageCountScore;
   meta_campaings_enable?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta_campaings?: any[];
@@ -110,7 +166,6 @@ export interface TenantConfiguration {
   enable_persist_leads_job?: boolean;
   count_messages_by_lead?: number;
   ask_all_unities?: boolean;
-  recontact_messages?: string[];
   toker_per_response?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   token_company?: Record<string, any>;
@@ -137,6 +192,7 @@ export interface ITenantConfig extends Document {
   chatbot_url?: string;
   status: TenantStatus;
   configuration: TenantConfiguration;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user_initial_intent?: Record<string, any>;
   sync_history: SyncRecord[];
   last_synced_at?: Date;
