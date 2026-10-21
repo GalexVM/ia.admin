@@ -669,6 +669,11 @@ export default function ConfigEditor({
         if (sanitized.custom_handoff_message === null || sanitized.custom_handoff_message === undefined) {
           sanitized.custom_handoff_message = "";
         }
+        if (Array.isArray(sanitized.phrases_to_avoid)) {
+          sanitized.phrases_to_avoid = (sanitized.phrases_to_avoid as string[]).join(", ");
+        } else if (typeof sanitized.phrases_to_avoid !== "string") {
+          sanitized.phrases_to_avoid = "";
+        }
         onSave(sanitized, syncToRemote);
       }
     }

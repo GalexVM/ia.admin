@@ -85,10 +85,14 @@ export async function POST(req: Request, context: RouteContext) {
       tenant.user_initial_intent = configuration;
       tenant.markModified("user_initial_intent");
 
-      tenant.configuration = {
+      const mergedConfig = {
         ...(tenant.configuration || {}),
         ...configuration,
       };
+      if (Array.isArray(mergedConfig.phrases_to_avoid)) {
+        mergedConfig.phrases_to_avoid = mergedConfig.phrases_to_avoid.join(", ");
+      }
+      tenant.configuration = mergedConfig;
       tenant.markModified("configuration");
     }
 
@@ -116,6 +120,15 @@ export async function POST(req: Request, context: RouteContext) {
             const remoteConfig = await getRes.json();
             if (remoteConfig && typeof remoteConfig === "object") {
               fullConfigToSync = { ...remoteConfig, ...tenant.configuration };
+              // Sanitizar campos problemáticos para Pydantic
+              if (fullConfigToSync.custom_handoff_message === null || fullConfigToSync.custom_handoff_message === undefined) {
+                fullConfigToSync.custom_handoff_message = "";
+              }
+              if (Array.isArray(fullConfigToSync.phrases_to_avoid)) {
+                fullConfigToSync.phrases_to_avoid = fullConfigToSync.phrases_to_avoid.join(", ");
+              } else if (fullConfigToSync.phrases_to_avoid === null || fullConfigToSync.phrases_to_avoid === undefined) {
+                fullConfigToSync.phrases_to_avoid = "";
+              }
               // También guardamos la config completa en la BD
               tenant.configuration = fullConfigToSync;
               tenant.markModified("configuration");
@@ -123,6 +136,18 @@ export async function POST(req: Request, context: RouteContext) {
           }
         } catch (getErr) {
           console.warn("No se pudo obtener config remota previa al PUT:", getErr);
+        }
+
+        // Asegurar que custom_handoff_message y phrases_to_avoid sean strings válidos antes del PUT
+        if (fullConfigToSync && typeof fullConfigToSync === "object") {
+          if (fullConfigToSync.custom_handoff_message === null || fullConfigToSync.custom_handoff_message === undefined) {
+            fullConfigToSync.custom_handoff_message = "";
+          }
+          if (Array.isArray(fullConfigToSync.phrases_to_avoid)) {
+            fullConfigToSync.phrases_to_avoid = fullConfigToSync.phrases_to_avoid.join(", ");
+          } else if (fullConfigToSync.phrases_to_avoid === null || fullConfigToSync.phrases_to_avoid === undefined) {
+            fullConfigToSync.phrases_to_avoid = "";
+          }
         }
 
         const controller = new AbortController();

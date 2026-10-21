@@ -120,10 +120,14 @@ export async function PUT(req: Request, context: RouteContext) {
 
     // Fusionar configuración preservando cualquier clave previa (incluyendo Cat. 10 si no se editó)
     if (configuration && typeof configuration === "object") {
-      tenant.configuration = {
+      const mergedConfig = {
         ...(tenant.configuration || {}),
         ...configuration,
       };
+      if (Array.isArray(mergedConfig.phrases_to_avoid)) {
+        mergedConfig.phrases_to_avoid = mergedConfig.phrases_to_avoid.join(", ");
+      }
+      tenant.configuration = mergedConfig;
       tenant.markModified("configuration");
     }
 
@@ -157,6 +161,11 @@ export async function PUT(req: Request, context: RouteContext) {
               if (fullConfigToSync.custom_handoff_message === null || fullConfigToSync.custom_handoff_message === undefined) {
                 fullConfigToSync.custom_handoff_message = "";
               }
+              if (Array.isArray(fullConfigToSync.phrases_to_avoid)) {
+                fullConfigToSync.phrases_to_avoid = fullConfigToSync.phrases_to_avoid.join(", ");
+              } else if (fullConfigToSync.phrases_to_avoid === null || fullConfigToSync.phrases_to_avoid === undefined) {
+                fullConfigToSync.phrases_to_avoid = "";
+              }
               // También guardamos la config completa en la BD
               tenant.configuration = fullConfigToSync;
               tenant.markModified("configuration");
@@ -166,10 +175,15 @@ export async function PUT(req: Request, context: RouteContext) {
           console.warn("No se pudo obtener config remota previa al PUT:", getErr);
         }
 
-        // Asegurar que custom_handoff_message sea string válido antes del PUT
+        // Asegurar que custom_handoff_message y phrases_to_avoid sean strings válidos antes del PUT
         if (fullConfigToSync && typeof fullConfigToSync === "object") {
           if (fullConfigToSync.custom_handoff_message === null || fullConfigToSync.custom_handoff_message === undefined) {
             fullConfigToSync.custom_handoff_message = "";
+          }
+          if (Array.isArray(fullConfigToSync.phrases_to_avoid)) {
+            fullConfigToSync.phrases_to_avoid = fullConfigToSync.phrases_to_avoid.join(", ");
+          } else if (fullConfigToSync.phrases_to_avoid === null || fullConfigToSync.phrases_to_avoid === undefined) {
+            fullConfigToSync.phrases_to_avoid = "";
           }
         }
 
