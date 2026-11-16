@@ -1,47 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 :root {
-  /* Fondos */
-  --bg-page: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-subtle: #f1f5f9;
-  --bg-muted: #e2e8f0;
+  /* ============================================================
+     MANUAL DE IDENTIDAD ZEFRON 2026 - SISTEMA DE DISEÑO
+     ============================================================ */
+
+  /* Colores Principales (Página 13) */
+  --zefiron-green: #43A047;       /* RGB 67, 170, 71 - Verde Principal */
+  --zefiron-green-light: #66BB6A; /* Tono Claro */
+  --zefiron-green-mid: #81C784;   /* Tono Medio */
+  --zefiron-green-pastel: #C8E6C9;/* Tono Pastel */
+  --zefiron-green-mint: #D8FFCA;  /* Tono Secundario Suave */
+
+  --zefiron-black: #191919;       /* RGB 25, 25, 25 - Negro Principal / Fondos */
+  --zefiron-gray-dark: #505050;   /* Gris Oscuro */
+  --zefiron-gray-mid: #9C9C9C;    /* Gris Medio */
+  --zefiron-gray-light: #DBDBDB;  /* Gris Claro */
+  --zefiron-gray-white: #F4F4F4;  /* Blanco Roto / Claro */
+  --zefiron-white: #ffffff;
+
+  /* Paleta Secundaria / Semántica (Página 13) */
+  --zefiron-yellow: #F5F05D;      /* Warning */
+  --zefiron-blue: #3D80D8;        /* Info */
+  --zefiron-red: #F71818;         /* Danger */
+
+  /* Fondos Institucionales Oscuros */
+  --bg-page: #191919;
+  --bg-surface: #222222;
+  --bg-card: #262626;
+  --bg-card-hover: #2e2e2e;
+  --bg-subtle: #2d2d2d;
+  --bg-muted: #3a3a3a;
   
   /* Tipografía y Textos */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --text-inverse: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #dbdbdb;
+  --text-muted: #9c9c9c;
+  --text-inverse: #191919;
   
-  /* Colores de Marca (Acento sutil y sofisticado) */
-  --brand-primary: #1e40af;
-  --brand-primary-hover: #1d4ed8;
-  --brand-surface: #eff6ff;
-  --brand-border: #bfdbfe;
+  /* Colores de Marca */
+  --brand-primary: #43A047;
+  --brand-primary-hover: #66BB6A;
+  --brand-light: #D8FFCA;
+  --brand-mid: #81C784;
+  --brand-pastel: #C8E6C9;
+  --brand-surface: rgba(67, 160, 71, 0.12);
+  --brand-surface-hover: rgba(67, 160, 71, 0.2);
+  --brand-border: rgba(67, 160, 71, 0.35);
   
-  /* Estados */
-  --success: #059669;
-  --success-surface: #ecfdf5;
-  --success-border: #a7f3d0;
+  /* Estados / Semántica */
+  --success: #43A047;
+  --success-light: #66BB6A;
+  --success-surface: rgba(67, 160, 71, 0.15);
+  --success-border: rgba(102, 187, 106, 0.35);
   
-  --warning: #d97706;
-  --warning-surface: #fffbeb;
-  --warning-border: #fde68a;
+  --warning: #F5F05D;
+  --warning-surface: rgba(245, 240, 93, 0.12);
+  --warning-border: rgba(245, 240, 93, 0.35);
   
-  --danger: #dc2626;
-  --danger-surface: #fef2f2;
-  --danger-border: #fecaca;
+  --danger: #F71818;
+  --danger-surface: rgba(247, 24, 24, 0.14);
+  --danger-border: rgba(247, 24, 24, 0.35);
+
+  --info: #3D80D8;
+  --info-surface: rgba(61, 128, 216, 0.14);
+  --info-border: rgba(61, 128, 216, 0.35);
 
   /* Bordes */
-  --border-subtle: #f1f5f9;
-  --border-default: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-focus: #2563eb;
+  --border-subtle: #2b2b2b;
+  --border-default: #383838;
+  --border-strong: #505050;
+  --border-focus: #43A047;
 
-  /* Sombras ultra suaves y elegantes */
-  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 2px 4px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -4px rgba(15, 23, 42, 0.04);
-  --shadow-glow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  /* Sombras y Resplandores (Sutiles y Elegantes en Dark Mode) */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.65);
+  --shadow-glow: 0 0 0 3px rgba(67, 160, 71, 0.25);
+  --shadow-brand: 0 4px 14px rgba(67, 160, 71, 0.35);
 
   /* Bordes redondeados */
   --radius-xs: 4px;
@@ -55,6 +92,9 @@
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Tipografía Primaria (Páginas 14-16): Poppins */
+  --font-family: var(--font-poppins), 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 * {
@@ -69,9 +109,46 @@ body {
   min-height: 100vh;
   background-color: var(--bg-page);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Jerarquía Tipográfica Zefiron (Página 16) */
+h1 {
+  font-family: var(--font-family);
+  font-size: 2.1875rem; /* 35px */
+  font-weight: 600;      /* Semibold */
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+h2 {
+  font-family: var(--font-family);
+  font-size: 1.5625rem; /* 25px */
+  font-weight: 600;      /* Semibold - Medium */
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-family: var(--font-family);
+  font-size: 1.25rem;    /* 20px */
+  font-weight: 500;      /* Medium */
+  color: var(--text-primary);
+}
+
+p, body {
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+small, caption, .caption {
+  font-family: var(--font-family);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
 
 a {
@@ -80,14 +157,33 @@ a {
 }
 
 button {
-  font-family: inherit;
+  font-family: var(--font-family);
 }
 
 input, textarea, select {
-  font-family: inherit;
+  font-family: var(--font-family);
 }
 
-/* Clases utilitarias globales sutiles */
+/* Scrollbars personalizados institucionales */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-primary);
+}
+
+/* Clases utilitarias de Badges (Paleta Zefiron 2026) */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -96,6 +192,7 @@ input, textarea, select {
   font-size: 0.75rem;
   font-weight: 500;
   border-radius: var(--radius-full);
+  font-family: var(--font-family);
 }
 
 .badge-pending {
@@ -106,13 +203,13 @@ input, textarea, select {
 
 .badge-configured {
   background: var(--brand-surface);
-  color: var(--brand-primary);
+  color: var(--brand-mid);
   border: 1px solid var(--brand-border);
 }
 
 .badge-synced {
   background: var(--success-surface);
-  color: var(--success);
+  color: var(--zefiron-green-light);
   border: 1px solid var(--success-border);
 }
 
@@ -120,4 +217,10 @@ input, textarea, select {
   background: var(--danger-surface);
   color: var(--danger);
   border: 1px solid var(--danger-border);
+}
+
+.badge-info {
+  background: var(--info-surface);
+  color: var(--info);
+  border: 1px solid var(--info-border);
 }

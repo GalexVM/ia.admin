@@ -117,6 +117,12 @@ export async function PUT(req: Request, context: RouteContext) {
     if (chatbot_url !== undefined) {
       tenant.chatbot_url = chatbot_url.trim();
     }
+    if (body.cutoff_day !== undefined) {
+      const parsedCutoff = parseInt(String(body.cutoff_day), 10);
+      if (!isNaN(parsedCutoff) && parsedCutoff >= 1 && parsedCutoff <= 31) {
+        tenant.cutoff_day = parsedCutoff;
+      }
+    }
 
     // Fusionar configuración preservando cualquier clave previa (incluyendo Cat. 10 si no se editó)
     if (configuration && typeof configuration === "object") {
@@ -277,6 +283,53 @@ export async function PUT(req: Request, context: RouteContext) {
     console.error("Error al actualizar tenant:", error);
     return NextResponse.json(
       { error: "Error interno al actualizar el tenant" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: Request, context: RouteContext) {
+  try {
+    const { id } = await context.params;
+    const body = await req.json().catch(() => ({}));
+
+    if (!id) {
+      return NextResponse.json({ error: "Falta el ID del tenant" }, { status: 400 });
+    }
+
+    await connectToDatabase();
+    const tenant = await TenantConfig.findById(id);
+
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
+    }
+
+    if (body.cutoff_day !== undefined) {
+      const parsedCutoff = parseInt(String(body.cutoff_day), 10);
+      if (!isNaN(parsedCutoff) && parsedCutoff >= 1 && parsedCutoff <= 31) {
+        tenant.cutoff_day = parsedCutoff;
+      }
+    }
+
+    if (body.company_name !== undefined) {
+      tenant.company_name = body.company_name.trim();
+    }
+
+    if (body.chatbot_url !== undefined) {
+      tenant.chatbot_url = body.chatbot_url.trim();
+    }
+
+    await tenant.save();
+
+    return NextResponse.json({
+      success: true,
+      tenant,
+      message: "Actualizado correctamente",
+    });
+  } catch (error) {
+    console.error("Error en PATCH tenant:", error);
+    return NextResponse.json(
+      { error: "Error interno al actualizar datos del tenant" },
       { status: 500 }
     );
   }

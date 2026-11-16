@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, AlertCircle, Lock } from "lucide-react";
 import styles from "./login.module.css";
+import ZefironLogo from "@/components/ZefironLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,27 +51,33 @@ export default function LoginPage() {
 
   return (
     <div className={styles.container}>
+      {/* Elementos gráficos decorativos de la marca (Manual Páginas 1 y 18) */}
+      <div className={styles.decorativeRibbon1} aria-hidden="true" />
+      <div className={styles.decorativeRibbon2} aria-hidden="true" />
+
       <div className={styles.card}>
         <div className={styles.header}>
-          <div className={styles.iconWrapper}>
-            <Shield size={26} strokeWidth={2.2} />
+          <div className={styles.logoContainer}>
+            <ZefironLogo variant="with-slogan" size="lg" theme="dark" showAdminBadge />
           </div>
-          <h1 className={styles.title}>Zefiron Admin Central</h1>
           <p className={styles.subtitle}>
-            Ingresa la contraseña maestra para administrar las instancias y configuraciones
+            Portal administrativo central para orquestar instancias, inteligencia artificial y parámetros de configuración.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.fieldGroup}>
             <label className={styles.label} htmlFor="password">
-              Contraseña Maestra
+              Contraseña Maestra de Acceso
             </label>
             <div className={styles.inputWrapper}>
+              <div className={styles.inputIcon}>
+                <Lock size={16} />
+              </div>
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••••••"
+                placeholder="Ingresa tu clave maestra"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={styles.input}
@@ -100,20 +107,20 @@ export default function LoginPage() {
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
-                <span>Verificando...</span>
+                <span>Verificando credenciales...</span>
               </>
             ) : (
               <>
-                <span>Acceder al Panel</span>
+                <span>Acceder a IA Admin Central</span>
                 <ArrowRight size={18} />
               </>
             )}
           </button>
         </form>
 
-        <p className={styles.footerNote}>
-          Acceso protegido exclusivo para administradores de Zefiron
-        </p>
+        <div className={styles.footerNote}>
+          <span>Acceso protegido exclusivo para administradores autorizados de Zefiron.</span>
+        </div>
       </div>
     </div>
   );

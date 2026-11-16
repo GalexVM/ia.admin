@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Shield,
-  LogOut,
   Plus,
   Copy,
   Check,
@@ -41,7 +39,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
-  // Modal State
+  // Modal State para Tenants
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [creationMode, setCreationMode] = useState<"new" | "import">("new");
   const [newCompanyName, setNewCompanyName] = useState("");
@@ -71,12 +69,6 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchTenants();
   }, []);
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
-  };
 
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,31 +194,29 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.wrapper}>
-      {/* Navbar */}
+      {/* Barra superior de contexto */}
       <header className={styles.navbar}>
-        <div className={styles.brand}>
-          <div className={styles.brandLogo}>
-            <Shield size={20} />
-          </div>
-          <span className={styles.brandTitle}>Zefiron Admin Central</span>
+        <div className={styles.moduleBreadcrumb}>
+          <span className={styles.breadcrumbCategory}>Módulos</span>
+          <span className={styles.breadcrumbSeparator}>/</span>
+          <span className={styles.breadcrumbCurrent}>Registro de Configuración</span>
         </div>
 
         <div className={styles.navActions}>
-          <button onClick={handleLogout} className={styles.logoutBtn}>
-            <LogOut size={14} />
-            <span>Cerrar Sesión</span>
-          </button>
+          <div className={styles.taglineBadge}>
+            <span>Make your life easier</span>
+          </div>
         </div>
       </header>
 
       {/* Contenido Principal */}
       <main className={styles.main}>
-        {/* Cabecera y Botón de Acción */}
+        {/* Cabecera del Módulo y Botón de Acción */}
         <div className={styles.topBar}>
           <div className={styles.heading}>
-            <h1 className={styles.headingTitle}>Panel de Instancias & Onboarding</h1>
+            <h1 className={styles.headingTitle}>Registro de Configuración</h1>
             <p className={styles.headingSubtitle}>
-              Gestiona el aprovisionamiento, enlaces únicos de clientes y sincronización de configuraciones.
+              Gestión centralizada de instancias, endpoints y sincronización de parámetros de IA.
             </p>
           </div>
 
@@ -375,11 +365,11 @@ export default function DashboardPage() {
                           justifyContent: "center",
                           padding: "6px 8px",
                           borderRadius: "var(--radius-sm)",
-                          border: "1px solid var(--error)",
-                          color: "var(--error)",
-                          background: "transparent",
+                          border: "1px solid var(--danger)",
+                          color: "var(--danger)",
+                          background: "var(--danger-surface)",
                           cursor: "pointer",
-                          transition: "all 0.2s"
+                          transition: "all var(--transition-fast)"
                         }}
                         title="Eliminar Onboarding"
                       >
@@ -410,19 +400,21 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <div style={{ display: "flex", gap: "10px", padding: "0 24px", marginBottom: "10px" }}>
+            <div style={{ display: "flex", gap: "10px", padding: "0 24px", marginBottom: "16px" }}>
               <button
                 type="button"
                 onClick={() => setCreationMode("new")}
                 style={{
-                  padding: "6px 12px",
+                  padding: "8px 14px",
                   borderRadius: "var(--radius-sm)",
-                  border: "none",
-                  background: creationMode === "new" ? "var(--brand-primary)" : "var(--bg-card-hover)",
-                  color: creationMode === "new" ? "#fff" : "var(--text-secondary)",
+                  border: "1px solid",
+                  borderColor: creationMode === "new" ? "var(--brand-primary)" : "var(--border-default)",
+                  background: creationMode === "new" ? "var(--brand-surface)" : "var(--bg-subtle)",
+                  color: creationMode === "new" ? "var(--brand-mid)" : "var(--text-secondary)",
                   cursor: "pointer",
                   fontSize: "0.875rem",
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  transition: "all var(--transition-fast)",
                 }}
               >
                 Nuevo Onboarding
@@ -431,14 +423,16 @@ export default function DashboardPage() {
                 type="button"
                 onClick={() => setCreationMode("import")}
                 style={{
-                  padding: "6px 12px",
+                  padding: "8px 14px",
                   borderRadius: "var(--radius-sm)",
-                  border: "none",
-                  background: creationMode === "import" ? "var(--brand-primary)" : "var(--bg-card-hover)",
-                  color: creationMode === "import" ? "#fff" : "var(--text-secondary)",
+                  border: "1px solid",
+                  borderColor: creationMode === "import" ? "var(--brand-primary)" : "var(--border-default)",
+                  background: creationMode === "import" ? "var(--brand-surface)" : "var(--bg-subtle)",
+                  color: creationMode === "import" ? "var(--brand-mid)" : "var(--text-secondary)",
                   cursor: "pointer",
                   fontSize: "0.875rem",
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  transition: "all var(--transition-fast)",
                 }}
               >
                 Importar por URL
@@ -456,12 +450,7 @@ export default function DashboardPage() {
                     placeholder="Ej. Inmobiliaria Panorama"
                     value={newCompanyName}
                     onChange={(e) => setNewCompanyName(e.target.value)}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--border-default)",
-                      fontSize: "0.875rem",
-                    }}
+                    className={styles.modalInput}
                     autoFocus
                   />
                 </div>
@@ -475,12 +464,7 @@ export default function DashboardPage() {
                     placeholder="https://api.cliente.com/configuration"
                     value={newChatbotUrl}
                     onChange={(e) => setNewChatbotUrl(e.target.value)}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--border-default)",
-                      fontSize: "0.875rem",
-                    }}
+                    className={styles.modalInput}
                   />
                   <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
                     Si la dejas vacía, el onboarding guardará los datos en MongoDB para aprovisionamiento diferido.
@@ -515,12 +499,7 @@ export default function DashboardPage() {
                     placeholder="Ej. https://ia.zefiron.com/demo/configuration"
                     value={importUrl}
                     onChange={(e) => setImportUrl(e.target.value)}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--border-default)",
-                      fontSize: "0.875rem",
-                    }}
+                    className={styles.modalInput}
                     required
                     autoFocus
                   />

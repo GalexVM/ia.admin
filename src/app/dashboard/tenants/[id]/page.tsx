@@ -228,12 +228,29 @@ export default function TenantDetailPage({ params }: PageProps) {
 
   return (
     <div className={styles.wrapper}>
+      {/* Barra superior de contexto */}
+      <header className={styles.navbar}>
+        <div className={styles.moduleBreadcrumb}>
+          <span className={styles.breadcrumbCategory}>Módulos</span>
+          <span className={styles.breadcrumbSeparator}>/</span>
+          <Link href="/dashboard" className={styles.breadcrumbLink}>
+            Registro de Configuración
+          </Link>
+          <span className={styles.breadcrumbSeparator}>/</span>
+          <span className={styles.breadcrumbCurrent}>{tenant.company_name}</span>
+        </div>
+
+        <div className={styles.taglineBadge}>
+          <span>Make your life easier</span>
+        </div>
+      </header>
+
       <main className={styles.main}>
         {/* Navegación y Breadcrumbs */}
         <div className={styles.topBar}>
           <Link href="/dashboard" className={styles.backBtn}>
             <ArrowLeft size={16} />
-            <span>Volver a todas las instancias</span>
+            <span>Volver a Registro de Configuración</span>
           </Link>
 
           {/* Tarjeta de Cabecera del Tenant */}
@@ -369,7 +386,7 @@ export default function TenantDetailPage({ params }: PageProps) {
                         <summary style={{ cursor: "pointer", color: "var(--brand-primary)", fontWeight: 500, outline: "none", userSelect: "none" }}>
                           Ver Payload Enviado
                         </summary>
-                        <pre style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)", padding: 12, borderRadius: 8, marginTop: 8, overflowX: "auto" }}>
+                        <pre style={{ background: "var(--bg-page)", border: "1px solid var(--border-default)", color: "var(--brand-light)", padding: 12, borderRadius: 8, marginTop: 8, overflowX: "auto" }}>
                           {JSON.stringify(item.payload, null, 2)}
                         </pre>
                       </details>

@@ -12,6 +12,7 @@ import {
 import styles from "./setup.module.css";
 import ConfigEditor from "@/components/ConfigEditor";
 import { TenantConfiguration } from "@/models/TenantConfig";
+import ZefironLogo from "@/components/ZefironLogo";
 
 interface SetupPageProps {
   params: Promise<{ token: string }>;
@@ -160,9 +161,11 @@ export default function SetupWizardPage({ params }: SetupPageProps) {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.container}>
-        {/* Header */}
+        {/* Header con Identidad Zefiron */}
         <div className={styles.header}>
-          
+          <div style={{ marginBottom: 16 }}>
+            <ZefironLogo variant="with-slogan" size="md" theme="dark" />
+          </div>
           <h1 className={styles.pageTitle}>Portal de Configuración de Asistente</h1>
           <p className={styles.pageSubtitle}>
             Personaliza la identidad, tono de voz, reglas comerciales y agendamiento de citas para{" "}

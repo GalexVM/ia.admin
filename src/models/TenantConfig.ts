@@ -13,6 +13,7 @@ export interface ITenantConfig extends Document {
   company_name: string;
   chatbot_name?: string;
   chatbot_url?: string;
+  cutoff_day?: number;
   status: TenantStatus;
   configuration: TenantConfiguration;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +46,12 @@ const TenantConfigSchema = new Schema<ITenantConfig>(
       type: String,
       default: "",
       trim: true,
+    },
+    cutoff_day: {
+      type: Number,
+      default: 25,
+      min: 1,
+      max: 31,
     },
     status: {
       type: String,

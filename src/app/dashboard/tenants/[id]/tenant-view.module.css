@@ -5,8 +5,64 @@
   flex-direction: column;
 }
 
+.navbar {
+  height: 68px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  backdrop-filter: blur(8px);
+}
+
+.moduleBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+}
+
+.breadcrumbCategory {
+  color: var(--text-muted);
+}
+
+.breadcrumbSeparator {
+  color: var(--border-strong);
+}
+
+.breadcrumbLink {
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.breadcrumbLink:hover {
+  color: var(--brand-primary-hover);
+}
+
+.breadcrumbCurrent {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.taglineBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
 .main {
-  max-width: 1200px;
+  max-width: 1240px;
   width: 100%;
   margin: 0 auto;
   padding: 32px 24px 60px 24px;
@@ -24,18 +80,20 @@
 .backBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.84rem;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-secondary);
   background: transparent;
   border: none;
   cursor: pointer;
   width: fit-content;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .backBtn:hover {
-  color: var(--brand-primary);
+  color: var(--brand-primary-hover);
+  transform: translateX(-2px);
 }
 
 .headerCard {
@@ -67,7 +125,7 @@
 }
 
 .companyTitle {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -79,7 +137,7 @@
   gap: 16px;
   flex-wrap: wrap;
   font-size: 0.8125rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .metaItem {
@@ -103,7 +161,7 @@
   font-size: 0.8125rem;
   font-weight: 500;
   border-radius: var(--radius-sm);
-  background: var(--bg-surface);
+  background: var(--bg-subtle);
   color: var(--text-secondary);
   border: 1px solid var(--border-default);
   cursor: pointer;
@@ -111,7 +169,7 @@
 }
 
 .secondaryBtn:hover {
-  background: var(--bg-subtle);
+  background: var(--bg-card-hover);
   border-color: var(--border-strong);
   color: var(--text-primary);
 }
@@ -121,14 +179,14 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 18px 22px;
   display: grid;
   grid-template-columns: 1fr 2fr auto;
-  gap: 16px;
+  gap: 18px;
   align-items: flex-end;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 860px) {
   .endpointCard {
     grid-template-columns: 1fr;
   }
@@ -147,17 +205,19 @@
 }
 
 .input {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   color: var(--text-primary);
-  background: var(--bg-surface);
+  background: var(--bg-page);
   outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .input:focus {
   border-color: var(--border-focus);
+  box-shadow: var(--shadow-glow);
 }
 
 /* History drawer/section */
@@ -165,21 +225,22 @@
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
-  padding: 20px 24px;
+  padding: 22px 26px;
+  box-shadow: var(--shadow-xs);
 }
 
 .historyTitle {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .historyList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 200px;
+  gap: 10px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
@@ -187,8 +248,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--bg-subtle);
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
 }
