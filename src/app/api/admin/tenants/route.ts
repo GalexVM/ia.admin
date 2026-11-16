@@ -2,15 +2,24 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { connectToDatabase } from "@/lib/db";
 import { TenantConfig, DEFAULT_TENANT_CONFIGURATION } from "@/models/TenantConfig";
+import { TenantCutoff } from "@/models/TenantCutoff";
 
 export async function GET() {
   try {
     await connectToDatabase();
-    const tenants = await TenantConfig.find({})
-      .sort({ createdAt: -1 })
-      .lean();
+    const [tenants, cutoffs] = await Promise.all([
+      TenantConfig.find({}).sort({ createdAt: -1 }).lean(),
+      TenantCutoff.find({}).lean(),
+    ]);
 
-    return NextResponse.json({ success: true, tenants });
+    const cutoffMap = new Map(cutoffs.map((c) => [c.tenant_id, c.cutoff_day]));
+
+    const enrichedTenants = tenants.map((t) => ({
+      ...t,
+      cutoff_day: cutoffMap.get(String(t._id)) ?? t.cutoff_day ?? 25,
+    }));
+
+    return NextResponse.json({ success: true, tenants: enrichedTenants });
   } catch (error) {
     console.error("Error al listar tenants:", error);
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { TenantConfig } from "@/models/TenantConfig";
+import { TenantCutoff } from "@/models/TenantCutoff";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -73,7 +74,13 @@ export async function GET(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Tenant no encontrado" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, tenant });
+    const cutoffDoc = await TenantCutoff.findOne({ tenant_id: String(id) }).lean();
+    const enriched = {
+      ...tenant,
+      cutoff_day: cutoffDoc?.cutoff_day ?? tenant.cutoff_day ?? 25,
+    };
+
+    return NextResponse.json({ success: true, tenant: enriched });
   } catch (error) {
     console.error("Error al obtener tenant o consultar endpoint:", error);
     return NextResponse.json(
@@ -121,6 +128,11 @@ export async function PUT(req: Request, context: RouteContext) {
       const parsedCutoff = parseInt(String(body.cutoff_day), 10);
       if (!isNaN(parsedCutoff) && parsedCutoff >= 1 && parsedCutoff <= 31) {
         tenant.cutoff_day = parsedCutoff;
+        await TenantCutoff.findOneAndUpdate(
+          { tenant_id: String(tenant._id) },
+          { cutoff_day: parsedCutoff, company_name: tenant.company_name },
+          { upsert: true, new: true }
+        );
       }
     }
 
@@ -308,6 +320,11 @@ export async function PATCH(req: Request, context: RouteContext) {
       const parsedCutoff = parseInt(String(body.cutoff_day), 10);
       if (!isNaN(parsedCutoff) && parsedCutoff >= 1 && parsedCutoff <= 31) {
         tenant.cutoff_day = parsedCutoff;
+        await TenantCutoff.findOneAndUpdate(
+          { tenant_id: String(tenant._id) },
+          { cutoff_day: parsedCutoff, company_name: tenant.company_name },
+          { upsert: true, new: true }
+        );
       }
     }
 

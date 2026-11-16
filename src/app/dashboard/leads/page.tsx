@@ -26,6 +26,11 @@ import {
   EyeOff,
   X,
   Check,
+  Share2,
+  ExternalLink,
+  Copy,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import styles from "./leads.module.css";
 import { TenantStatus } from "@/types/tenant";
@@ -57,6 +62,15 @@ interface ProviderBalanceItem {
   keySource: "database" | "env" | "none";
   envVarName?: string;
   maskedKey: string;
+}
+
+interface SharedViewItem {
+  _id: string;
+  token: string;
+  title: string;
+  included_providers: string[];
+  included_tenants: string[];
+  createdAt: string;
 }
 
 export const DEFAULT_CUTOFF_DAY = 25;
@@ -219,6 +233,16 @@ function TenantLeadCard({
     },
     [tenant._id, tenant.chatbot_url, customPassword, onCountUpdate]
   );
+
+  // Sincronizar con el cutoff_day de la base de datos si llega del backend
+  useEffect(() => {
+    if (tenant.cutoff_day && tenant.cutoff_day !== cardCutoffDay) {
+      setCardCutoffDay(tenant.cutoff_day);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`tenant_cutoff_${tenant._id}`, String(tenant.cutoff_day));
+      }
+    }
+  }, [tenant.cutoff_day, tenant._id]);
 
   // Sincronizar fechas cuando cambia el preset global o los parámetros
   useEffect(() => {
@@ -613,6 +637,160 @@ export default function LeadsTrackPage() {
     }
   };
 
+  // Estados y funciones para Vistas Compartidas (Links independientes)
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [activeViewTab, setActiveViewTab] = useState<"create" | "list">("create");
+  const [viewsList, setViewsList] = useState<SharedViewItem[]>([]);
+  const [isLoadingViews, setIsLoadingViews] = useState(false);
+  const [newViewTitle, setNewViewTitle] = useState("Vista Ejecutiva");
+  const [viewSelectedProviders, setViewSelectedProviders] = useState<string[]>([
+    "openai",
+    "openrouter",
+  ]);
+  const [viewSelectedTenants, setViewSelectedTenants] = useState<string[]>([]);
+  const [isCreatingView, setIsCreatingView] = useState(false);
+  const [createdViewUrl, setCreatedViewUrl] = useState<string | null>(null);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [editingView, setEditingView] = useState<SharedViewItem | null>(null);
+
+  const loadViews = async () => {
+    setIsLoadingViews(true);
+    try {
+      const res = await fetch("/api/admin/views");
+      const data = await res.json();
+      if (data.views) setViewsList(data.views);
+    } catch (e) {
+      console.error("Error al cargar vistas:", e);
+    } finally {
+      setIsLoadingViews(false);
+    }
+  };
+
+  const handleResetViewForm = () => {
+    setEditingView(null);
+    setNewViewTitle("Vista Ejecutiva");
+    setViewSelectedProviders(["openai", "openrouter"]);
+    setViewSelectedTenants(tenants.map((t) => t._id));
+    setCreatedViewUrl(null);
+  };
+
+  const handleStartEditView = (v: SharedViewItem) => {
+    setEditingView(v);
+    setNewViewTitle(v.title);
+    setViewSelectedProviders([...v.included_providers]);
+    setViewSelectedTenants([...v.included_tenants]);
+    setCreatedViewUrl(null);
+    setActiveViewTab("create");
+  };
+
+  const openViewsModal = () => {
+    setViewModalOpen(true);
+    setActiveViewTab("create");
+    setEditingView(null);
+    setCreatedViewUrl(null);
+    if (viewSelectedTenants.length === 0 && tenants.length > 0) {
+      setViewSelectedTenants(tenants.map((t) => t._id));
+    }
+    loadViews();
+  };
+
+  const toggleViewProvider = (p: string) => {
+    setViewSelectedProviders((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+    );
+  };
+
+  const toggleViewTenant = (id: string) => {
+    setViewSelectedTenants((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllTenants = () => {
+    if (viewSelectedTenants.length === tenants.length) {
+      setViewSelectedTenants([]);
+    } else {
+      setViewSelectedTenants(tenants.map((t) => t._id));
+    }
+  };
+
+  const handleSaveView = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (viewSelectedProviders.length === 0 && viewSelectedTenants.length === 0) {
+      alert("Debes seleccionar al menos una tarjeta (de saldo o de entorno) para incluir en la vista.");
+      return;
+    }
+    setIsCreatingView(true);
+    try {
+      if (editingView) {
+        // Modo Edición de vista existente
+        const res = await fetch(`/api/admin/views/${editingView._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newViewTitle.trim() || editingView.title,
+            included_providers: viewSelectedProviders,
+            included_tenants: viewSelectedTenants,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.view) {
+          const fullUrl = `${window.location.origin}/view/${data.view.token}`;
+          setCreatedViewUrl(fullUrl);
+          setEditingView(data.view);
+          loadViews();
+        } else {
+          alert(data.error || "Error al actualizar la vista");
+        }
+      } else {
+        // Modo Creación de nueva vista
+        const res = await fetch("/api/admin/views", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newViewTitle.trim() || "Vista Ejecutiva",
+            included_providers: viewSelectedProviders,
+            included_tenants: viewSelectedTenants,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.view) {
+          const fullUrl = `${window.location.origin}/view/${data.view.token}`;
+          setCreatedViewUrl(fullUrl);
+          loadViews();
+        } else {
+          alert(data.error || "Error al crear vista");
+        }
+      }
+    } catch {
+      alert("Error de red al procesar la vista");
+    } finally {
+      setIsCreatingView(false);
+    }
+  };
+
+  const handleDeleteView = async (viewId: string) => {
+    if (!confirm("¿Eliminar esta vista compartida? El enlace dejará de funcionar permanentemente.")) return;
+    try {
+      const res = await fetch(`/api/admin/views/${viewId}`, { method: "DELETE" });
+      if (res.ok) {
+        setViewsList((prev) => prev.filter((v) => v._id !== viewId));
+        if (editingView?._id === viewId) {
+          handleResetViewForm();
+        }
+      }
+    } catch {
+      alert("Error al eliminar la vista");
+    }
+  };
+
+  const handleCopyLink = (tokenStr: string) => {
+    const fullUrl = `${window.location.origin}/view/${tokenStr}`;
+    navigator.clipboard.writeText(fullUrl);
+    setCopiedToken(tokenStr);
+    setTimeout(() => setCopiedToken(null), 2500);
+  };
+
   useEffect(() => {
     setActivePreset("cutoff");
     loadTenants();
@@ -760,6 +938,16 @@ export default function LeadsTrackPage() {
           </div>
 
           <div className={styles.globalActions}>
+            <button
+              type="button"
+              onClick={openViewsModal}
+              className={styles.viewsBtn}
+              title="Generar enlaces compartibles limpios para consultar datos (sin claves ni URLs)"
+            >
+              <Share2 size={14} />
+              <span>Generar Vistas</span>
+            </button>
+
             <div
               className={styles.passwordBadge}
               title="Busca {ENTORNO}_ADMIN_KEY (ej. DEMO_ADMIN_KEY) en .env.local"
@@ -1258,6 +1446,339 @@ export default function LeadsTrackPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Gestión de Vistas Compartidas */}
+      {viewModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.viewModalContent}>
+            <div className={styles.modalHeader}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Share2 size={20} style={{ color: "var(--brand-primary)" }} />
+                <div>
+                  <h2 className={styles.modalTitle}>Vistas Compartidas</h2>
+                  <p
+                    style={{
+                      fontSize: "0.78rem",
+                      color: "var(--text-muted)",
+                      margin: "2px 0 0 0",
+                    }}
+                  >
+                    Genera enlaces limpios para que directivos consulten saldos y leads recurrentemente sin detalles técnicos.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewModalOpen(false)}
+                className={styles.closeBtn}
+                title="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Pestañas: Crear / Editar Vista / Vistas Creadas */}
+            <div className={styles.viewModalTabs}>
+              <button
+                type="button"
+                className={`${styles.viewModalTab} ${
+                  activeViewTab === "create" ? styles.viewModalTabActive : ""
+                }`}
+                onClick={() => {
+                  if (editingView) {
+                    handleResetViewForm();
+                  }
+                  setActiveViewTab("create");
+                }}
+              >
+                {editingView ? "Editar Vista" : "Crear Nueva Vista"}
+              </button>
+              <button
+                type="button"
+                className={`${styles.viewModalTab} ${
+                  activeViewTab === "list" ? styles.viewModalTabActive : ""
+                }`}
+                onClick={() => setActiveViewTab("list")}
+              >
+                Vistas Activas ({viewsList.length})
+              </button>
+            </div>
+
+            {/* Tab 1: Formulario para Crear / Editar Vista */}
+            {activeViewTab === "create" && (
+              <form onSubmit={handleSaveView} className={styles.modalForm}>
+                {editingView && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 12px",
+                      background: "var(--brand-surface)",
+                      border: "1px solid var(--brand-border)",
+                      borderRadius: "var(--radius-xs)",
+                      fontSize: "0.8rem",
+                      color: "var(--brand-primary)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <Pencil size={13} />
+                      <span>
+                        Editando tarjetas de: <strong>{editingView.title}</strong>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetViewForm}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--text-muted)",
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      Cancelar y crear nueva
+                    </button>
+                  </div>
+                )}
+
+                {createdViewUrl && (
+                  <div className={styles.viewCreatedBox}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <CheckCircle2 size={16} color="var(--brand-primary)" />
+                      <span style={{ fontSize: "0.84rem", fontWeight: 600, color: "var(--brand-primary)" }}>
+                        {editingView ? "¡Vista actualizada con éxito!" : "¡Vista generada con éxito!"}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                      {editingView
+                        ? "Los cambios en las tarjetas visibles ya se reflejan en el enlace permanente:"
+                        : "Copia el enlace seguro a continuación y compártelo con tu directiva:"}
+                    </span>
+                    <div className={styles.viewUrlRow}>
+                      <span className={styles.viewUrlText}>{createdViewUrl}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(createdViewUrl);
+                          setCopiedToken("new");
+                          setTimeout(() => setCopiedToken(null), 2500);
+                        }}
+                        className={styles.viewActionIconBtn}
+                      >
+                        <Copy size={13} />
+                        <span>{copiedToken === "new" ? "¡Copiado!" : "Copiar"}</span>
+                      </button>
+                      <a
+                        href={createdViewUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.viewActionIconBtn}
+                        style={{ textDecoration: "none" }}
+                      >
+                        <ExternalLink size={13} />
+                        <span>Abrir</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                    Título / Propósito de la Vista
+                  </label>
+                  <input
+                    type="text"
+                    value={newViewTitle}
+                    onChange={(e) => setNewViewTitle(e.target.value)}
+                    placeholder="Ej. Vista Gerencia, Reporte Mensual, Monitoreo Directiva"
+                    className={styles.modalInput}
+                    required
+                  />
+                </div>
+
+                {/* Selección de Tarjetas de Saldos */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                    Incluir Tarjetas de Saldo de IA:
+                  </label>
+                  <div className={styles.viewCheckboxGroup}>
+                    <label className={styles.viewCheckboxItem}>
+                      <input
+                        type="checkbox"
+                        checked={viewSelectedProviders.includes("openai")}
+                        onChange={() => toggleViewProvider("openai")}
+                      />
+                      <span>OpenAI (IA Comercial y ZefiMind)</span>
+                    </label>
+                    <label className={styles.viewCheckboxItem}>
+                      <input
+                        type="checkbox"
+                        checked={viewSelectedProviders.includes("openrouter")}
+                        onChange={() => toggleViewProvider("openrouter")}
+                      />
+                      <span>OpenRouter (IA Analítica)</span>
+                    </label>
+                    <label className={styles.viewCheckboxItem}>
+                      <input
+                        type="checkbox"
+                        checked={viewSelectedProviders.includes("claude")}
+                        onChange={() => toggleViewProvider("claude")}
+                      />
+                      <span>Claude (IA Comercial)</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Selección de Tarjetas de Entornos / Leads */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <label style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+                      Incluir Tarjetas de Conteo de Leads:
+                    </label>
+                    {tenants.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleSelectAllTenants}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "var(--brand-mid)",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        {viewSelectedTenants.length === tenants.length ? "Deseleccionar todos" : "Seleccionar todos"}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className={styles.viewCheckboxGroup}>
+                    {tenants.length === 0 ? (
+                      <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                        No hay entornos registrados actualmente.
+                      </span>
+                    ) : (
+                      tenants.map((t) => (
+                        <label key={t._id} className={styles.viewCheckboxItem}>
+                          <input
+                            type="checkbox"
+                            checked={viewSelectedTenants.includes(t._id)}
+                            onChange={() => toggleViewTenant(t._id)}
+                          />
+                          <span>
+                            {t.company_name} (Asistente: {t.chatbot_name || "Zefi"})
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <button
+                    type="button"
+                    onClick={() => setViewModalOpen(false)}
+                    className={styles.cancelBtn}
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingView}
+                    className={styles.primaryBtn}
+                  >
+                    {isCreatingView
+                      ? (editingView ? "Guardando Cambios..." : "Generando Enlace...")
+                      : (editingView ? "Guardar Cambios" : "Generar Vista Compartida")}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Tab 2: Lista de Vistas Activas */}
+            {activeViewTab === "list" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {isLoadingViews ? (
+                  <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)" }}>
+                    <Loader2 size={24} className="animate-spin" color="var(--brand-primary)" style={{ margin: "0 auto 8px auto" }} />
+                    <span style={{ fontSize: "0.8125rem" }}>Cargando vistas existentes...</span>
+                  </div>
+                ) : viewsList.length === 0 ? (
+                  <div style={{ padding: 32, textAlign: "center", color: "var(--text-muted)" }}>
+                    <Clock size={32} style={{ margin: "0 auto 8px auto", opacity: 0.5 }} />
+                    <p style={{ fontSize: "0.84rem", margin: 0 }}>No has creado vistas compartidas aún.</p>
+                  </div>
+                ) : (
+                  viewsList.map((v) => {
+                    const fullUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/view/${v.token}`;
+                    const isCopied = copiedToken === v.token;
+
+                    return (
+                      <div key={v._id} className={styles.viewsListItem}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
+                          <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                            {v.title}
+                          </span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            {v.included_providers.length} proveedor(es) IA &bull; {v.included_tenants.length} entorno(s)
+                          </span>
+                          <span style={{ fontSize: "0.72rem", color: "var(--brand-mid)", fontFamily: "monospace" }}>
+                            /view/{v.token}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditView(v)}
+                            className={styles.viewActionIconBtn}
+                            title="Editar tarjetas visibles"
+                          >
+                            <Pencil size={13} />
+                            <span>Editar</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(v.token)}
+                            className={styles.viewActionIconBtn}
+                            title="Copiar enlace"
+                          >
+                            <Copy size={13} />
+                            <span>{isCopied ? "¡Copiado!" : "Copiar"}</span>
+                          </button>
+                          <a
+                            href={fullUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.viewActionIconBtn}
+                            title="Abrir vista"
+                            style={{ textDecoration: "none" }}
+                          >
+                            <ExternalLink size={13} />
+                            <span>Abrir</span>
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteView(v._id)}
+                            className={styles.viewActionDeleteBtn}
+                            title="Eliminar vista"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1090,6 +1090,175 @@
   max-width: 440px;
 }
 
+/* Botón de Vistas Compartidas */
+.viewsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  color: var(--brand-primary);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.viewsBtn:hover {
+  background: var(--brand-surface);
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+/* Modal de Vistas Compartidas */
+.viewModalContent {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-modal);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.viewModalTabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-default);
+  gap: 8px;
+}
+
+.viewModalTab {
+  padding: 8px 16px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.viewModalTabActive {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+.viewCheckboxGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.viewCheckboxItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.viewCheckboxItem input {
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.viewCreatedBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(67, 160, 71, 0.08);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+
+.viewUrlRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 6px 10px;
+}
+
+.viewUrlText {
+  flex: 1;
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: var(--brand-mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewActionIconBtn {
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+
+.viewActionIconBtn:hover {
+  background: var(--brand-surface);
+  color: var(--brand-primary);
+  border-color: var(--brand-border);
+}
+
+.viewActionDeleteBtn {
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: var(--danger);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-fast);
+}
+
+.viewActionDeleteBtn:hover {
+  background: rgba(247, 24, 24, 0.1);
+  border-color: var(--danger);
+}
+
+.viewsListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  gap: 12px;
+}
+
 @media (max-width: 900px) {
   .statsGrid {
     grid-template-columns: repeat(2, 1fr);
